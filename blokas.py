@@ -52,6 +52,7 @@ class Transaction:
         total_utxo_value = sum(value for _, value in available_utxos)
         
         if total_utxo_value < self.amount:
+            print(f"Siuntėjas {self.sender.name} turi tik {total_utxo_value} pinigų, bet reikia {self.amount}.")
             raise ValueError("Siuntėjas neturi pakankamai pinigų.")
         
         used_utxos = []
@@ -59,13 +60,13 @@ class Transaction:
             if remaining_amount <= 0:
                 break
             if value >= remaining_amount:
-                self.inputs.append((utxo, remaining_amount))  
-                self.outputs.append((self.receiver.public_key, remaining_amount)) 
+                self.inputs.append((utxo, remaining_amount))  # Sukuriame input
+                self.outputs.append((self.receiver.public_key, remaining_amount))  # Sukuriame output
                 used_utxos.append(utxo)
                 remaining_amount = 0
             else:
-                self.inputs.append((utxo, value))
-                self.outputs.append((self.receiver.public_key, value)) 
+                self.inputs.append((utxo, value))  # Sukuriame input
+                self.outputs.append((self.receiver.public_key, value))  # Sukuriame output
                 used_utxos.append(utxo)
                 remaining_amount -= value
         
@@ -86,16 +87,16 @@ def generate_transactions(users, num_transactions=10000):
     return transactions
 
 def write_results_to_file_and_terminal(transactions, filename="transactions_output.txt"):
-    with open(filename, "w") as file:
-        for i, tx in enumerate(transactions[:5]):  
+    with open(filename, "w", encoding="utf-8") as file:
+        for i, tx in enumerate(transactions):
             file.write(f"Transaction {i+1}:\n")
-            file.write(f"  Sender: {tx.sender.name} → Receiver: {tx.receiver.name}\n")
+            file.write(f"  Sender: {tx.sender.name} -> Receiver: {tx.receiver.name}\n")
             file.write(f"  Amount: {tx.amount}\n")
             file.write(f"  Inputs: {tx.inputs}\n")
             file.write(f"  Outputs: {tx.outputs}\n\n")
             
             print(f"Transaction {i+1}:")
-            print(f"  Sender: {tx.sender.name} → Receiver: {tx.receiver.name}")
+            print(f"  Sender: {tx.sender.name} -> Receiver: {tx.receiver.name}")
             print(f"  Amount: {tx.amount}")
             print(f"  Inputs: {tx.inputs}")
             print(f"  Outputs: {tx.outputs}\n")

@@ -1,1 +1,30 @@
 Transaction 1:
+  Sender: User_287 -> Receiver: User_222
+  Amount: 761
+  Inputs: [('069a5b1387f288b7751bc70f33dca3121c506bf8a4164b66fd14db4c7d4abe3d', 164), ('d949aee3041bb7be1f8a55de767f95530829ed9243fc7c933228cb3f9d7f8a8d', 597)]
+  Outputs: [('226a3c2326a1e9fdd3c8938f405aabb864cb98a60098506b02632e9ff69dc97b', 164), ('226a3c2326a1e9fdd3c8938f405aabb864cb98a60098506b02632e9ff69dc97b', 597)]
+
+Transaction 2:
+  Sender: User_338 -> Receiver: User_466
+  Amount: 403
+  Inputs: [('5731eb15349ec5454f295f06057197e05e70db7c1f4a4eff1db8aa6a5e97dc47', 403)]
+  Outputs: [('f8848175354cde7218ef1588ef88c97f014ffc97d310f62e670b1067884ac435', 403)]
+
+Transaction 3:
+  Sender: User_123 -> Receiver: User_926
+  Amount: 647
+  Inputs: [('184393b33f3bd3056a2a5835e7ea68d63bfa22cccb55bf85f1cf4b13f9ea4264', 647)]
+  Outputs: [('e4edbb4dfe2aa8074233e683ce5ab8b4b96557d796b782ae5cac0cf425f22c56', 647)]
+
+Transaction 4:
+  Sender: User_362 -> Receiver: User_240
+  Amount: 929
+  Inputs: [('f8c106607618d4b820d6aedb59817e033b3b6a54722e6fe603f45291ef2e9607', 929)]
+  Outputs: [('916aa7927e3b9fa03c5f866a684e16465262487a9a033809dbf2de8eaeccd9b2', 929)]
+
+Transaction 5:
+  Sender: User_672 -> Receiver: User_535
+  Amount: 282
+  Inputs: [('481a12cf4cc02ea0d565e411409e0a84b984e9f11fb11ddccad7d804c07f7e32', 282)]
+  Outputs: [('43a88dcd447c894ade5639985618bf2dc419fad3fe86be0e002ac9ced2dc0326', 282)]
+
