@@ -153,17 +153,44 @@ class Block:
         )
         return aes_hashing(header.encode()).hex()
 
-    def mine_block(self):
-        target_prefix = "0" * self.difficulty
-        while True:
-            block_hash = self.calculate_hash()
-            if block_hash.startswith(target_prefix):
-                self.hash = block_hash
-                print(f"Block {self.block_id} mined: {self.hash} (nonce={self.nonce})")
-                break
-            self.nonce += 1
-            if self.nonce % 50000 == 0:
-                print(f"Mining nonce={self.nonce}")
+    #maininimo funkcija
+    def mine_blockchain(blockchain, transactions, block_size=100, difficulty=3):
+        block_id = len(blockchain.chain) + 1
+
+        while transactions:
+            new_block = create_new_block(transactions, block_id, blockchain.get_last_hash())
+
+            print(f"Kasamas blokas {new_block.block_id} su {len(new_block.transactions)} transakciju...")
+            while True:
+                block_hash = new_block.calculate_hash()
+                if block_hash.startswith("0" * difficulty):
+                    new_block.hash = block_hash
+                    print(f"Blokas iskastas! Nonce={new_block.nonce} Hash={new_block.hash}\n")
+                    break
+                new_block.nonce += 1
+
+            for tx in new_block.transactions:
+                tx.receiver.add_utxo(tx.amount)
+
+            del transactions[:block_size]
+
+            blockchain.add_block(new_block)
+
+            block_id += 1
+
+class Blockchain:
+    #konstruktorius
+    def __init__(self, difficulty=3):
+        self.chain = []
+        self.difficulty = difficulty
+    #grazina paskutinio bloko hash'a
+    def get_last_hash(self):
+        if not self.chain:
+            return "0" * 64
+        return self.chain[-1].hash
+    #prideda bloka i hasha
+    def add_block(self, block):
+        self.chain.append(block)
 
     def __repr__(self):
         return f"Block {self.block_id} - Hash: {self.calculate_hash()}"
