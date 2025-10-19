@@ -129,6 +129,23 @@ def generate_transactions(users, num_transactions=10000):
             print(f"Transakcija nepavyko: {e}")
     return transactions
 
+#funkcija Merkle Root Hash apskaiciavimui
+def calculate_merkle_root(transactions):
+    tx_hashes = [tx.transaction_id for tx in transactions]
+    if not tx_hashes:
+        return None
+    while len(tx_hashes) > 1:
+        if len(tx_hashes) % 2 != 0:
+            tx_hashes.append(tx_hashes[-1])
+        new_level = []
+        for i in range(0, len(tx_hashes), 2):
+            combined = (tx_hashes[i] + tx_hashes[i + 1]).encode()
+            new_level.append(aes_hashing(combined).hex())
+        tx_hashes = new_level
+
+    return tx_hashes[0]
+
+
 class Block:
     #konstruktorius
     def __init__(self, block_id, transactions, difficulty=3):
@@ -138,6 +155,7 @@ class Block:
         self.nonce = 0
         self.version = 1
         self.difficulty = difficulty
+        self.merkle_root = calculate_merkle_root(transactions)
 
         self.transactions = transactions
         self.hash = None
