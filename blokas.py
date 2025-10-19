@@ -130,15 +130,40 @@ def generate_transactions(users, num_transactions=10000):
     return transactions
 
 class Block:
-    def __init__(self, block_id, transactions):
-        self.block_id = block_id 
-        self.transactions = transactions 
+    #konstruktorius
+    def __init__(self, block_id, transactions, difficulty=3):
+        self.block_id = block_id
         self.previous_hash = None
         self.timestamp = aes_hashing(str(random.randint(1, 100000)).encode()).hex()  # Laiko antspaudas
+        self.nonce = 0
+        self.difficulty = difficulty
 
+        self.transactions = transactions
+        self.hash = None
+
+    #padaro hash is bloko header'io
     def calculate_hash(self):
-        block_contents = f"{self.block_id}{self.transactions}{self.previous_hash}{self.timestamp}"
-        return aes_hashing(block_contents.encode()).hex()
+        header = (
+            f"{self.version}"
+            f"{self.prev_block_hash}"
+            f"{self.timestamp}"
+            f"{self.merkle_root}"
+            f"{self.nonce}"
+            f"{self.difficulty}"
+        )
+        return aes_hashing(header.encode()).hex()
+
+    def mine_block(self):
+        target_prefix = "0" * self.difficulty
+        while True:
+            block_hash = self.calculate_hash()
+            if block_hash.startswith(target_prefix):
+                self.hash = block_hash
+                print(f"Block {self.block_id} mined: {self.hash} (nonce={self.nonce})")
+                break
+            self.nonce += 1
+            if self.nonce % 50000 == 0:
+                print(f"Mining nonce={self.nonce}")
 
     def __repr__(self):
         return f"Block {self.block_id} - Hash: {self.calculate_hash()}"
