@@ -153,8 +153,35 @@ class Block:
         )
         return aes_hashing(header.encode()).hex()
 
-    #maininimo funkcija
-    def mine_blockchain(blockchain, transactions, block_size=100, difficulty=3):
+
+
+class Blockchain:
+    #konstruktorius
+    def __init__(self, difficulty=3):
+        self.chain = []
+        self.difficulty = difficulty
+    #grazina paskutinio bloko hash'a
+    def get_last_hash(self):
+        if not self.chain:
+            return "0" * 64
+        return self.chain[-1].hash
+    #prideda bloka i hasha
+    def add_block(self, block):
+        self.chain.append(block)
+
+    def __repr__(self):
+        return f"Block {self.block_id} - Hash: {self.calculate_hash()}"
+
+#funkcija, sukurianti nauja bloka
+def create_new_block(transactions, block_id, prev_block_hash):
+    selected_transactions = random.sample(transactions, min(100, len(transactions)))
+    
+    new_block = Block(block_id, selected_transactions)
+    new_block.prev_block_hash=prev_block_hash
+    
+    return new_block
+ #maininimo funkcija
+def mine_blockchain(blockchain, transactions, block_size=100, difficulty=3):
         block_id = len(blockchain.chain) + 1
 
         while transactions:
@@ -180,33 +207,9 @@ class Block:
             mining_info = { "block_id": new_block.block_id,"nonce": new_block.nonce, "hash": new_block.hash, "difficulty": new_block.difficulty}
             write_to_file_mining(mining_info)
 
-class Blockchain:
-    #konstruktorius
-    def __init__(self, difficulty=3):
-        self.chain = []
-        self.difficulty = difficulty
-    #grazina paskutinio bloko hash'a
-    def get_last_hash(self):
-        if not self.chain:
-            return "0" * 64
-        return self.chain[-1].hash
-    #prideda bloka i hasha
-    def add_block(self, block):
-        self.chain.append(block)
-
-    def __repr__(self):
-        return f"Block {self.block_id} - Hash: {self.calculate_hash()}"
-
-#funkcija, sukurianti nauja bloka
-def create_new_block(transactions, block_id):
-    selected_transactions = random.sample(transactions, 100)
-    
-    new_block = Block(block_id, selected_transactions)
-    
-    return new_block
 #funkcija irasymui i faila
 def write_block_to_file(block, filename="block_output.txt"):
-    with open(filename, "w", encoding="utf-8") as file:
+    with open(filename, "a", encoding="utf-8") as file:
         file.write(f"Block ID: {block.block_id}\n")
         file.write(f"Block Timestamp: {block.timestamp}\n")
         file.write(f"Block Hash: {block.calculate_hash()}\n\n")
@@ -230,10 +233,9 @@ def write_block_to_file(block, filename="block_output.txt"):
 
 #funkcija irasanti i faila kasimo informacija
 def write_to_file_mining(mining_info, mining_log="mining_log.txt"):
-    with open(mining_log, "w", encoding="utf-8") as file:
+    with open(mining_log, "a", encoding="utf-8") as file:
         file.write(f"{'=' * 60}\n")
-        file.write(f"⛏️ MINING REPORT — Block ID: {mining_info['block_id']}\n")
-        file.write(f"Attempts: {mining_info['attempts']}\n")
+        file.write(f"MINING REPORT — Block ID: {mining_info['block_id']}\n")
         file.write(f"Difficulty: {mining_info['difficulty']}\n")
         file.write(f"Nonce: {mining_info['nonce']}\n")
         file.write(f"Block Hash: {mining_info['hash']}\n")
@@ -243,10 +245,13 @@ def main():
     print("Generuojame vartotojus ir transakcijas...")
     users = generate_users()
     transactions = generate_transactions(users)
+    blockchain = Blockchain(difficulty=3)
 
-    new_block = create_new_block(transactions, block_id=1)
+    new_block = create_new_block(transactions=transactions, block_id=1, prev_block_hash=blockchain.get_last_hash())
+    mine_blockchain(blockchain, transactions, block_size=100, difficulty=3)
 
     write_block_to_file(new_block)
+
 
 if __name__ == "__main__":
     main()
