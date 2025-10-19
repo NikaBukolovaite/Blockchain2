@@ -177,6 +177,8 @@ class Block:
             blockchain.add_block(new_block)
 
             block_id += 1
+            mining_info = { "block_id": new_block.block_id,"nonce": new_block.nonce, "hash": new_block.hash, "difficulty": new_block.difficulty}
+            write_to_file_mining(mining_info)
 
 class Blockchain:
     #konstruktorius
@@ -195,13 +197,14 @@ class Blockchain:
     def __repr__(self):
         return f"Block {self.block_id} - Hash: {self.calculate_hash()}"
 
+#funkcija, sukurianti nauja bloka
 def create_new_block(transactions, block_id):
     selected_transactions = random.sample(transactions, 100)
     
     new_block = Block(block_id, selected_transactions)
     
     return new_block
-
+#funkcija irasymui i faila
 def write_block_to_file(block, filename="block_output.txt"):
     with open(filename, "w", encoding="utf-8") as file:
         file.write(f"Block ID: {block.block_id}\n")
@@ -224,6 +227,17 @@ def write_block_to_file(block, filename="block_output.txt"):
         print(f"Block ID: {block.block_id}")
         print(f"Block Timestamp: {block.timestamp}")
         print(f"Block Hash: {block.calculate_hash()}")
+
+#funkcija irasanti i faila kasimo informacija
+def write_to_file_mining(mining_info, mining_log="mining_log.txt"):
+    with open(mining_log, "w", encoding="utf-8") as file:
+        file.write(f"{'=' * 60}\n")
+        file.write(f"⛏️ MINING REPORT — Block ID: {mining_info['block_id']}\n")
+        file.write(f"Attempts: {mining_info['attempts']}\n")
+        file.write(f"Difficulty: {mining_info['difficulty']}\n")
+        file.write(f"Nonce: {mining_info['nonce']}\n")
+        file.write(f"Block Hash: {mining_info['hash']}\n")
+        file.write(f"{'=' * 60}\n\n")
 
 def main():
     print("Generuojame vartotojus ir transakcijas...")
