@@ -133,9 +133,10 @@ class Block:
     #konstruktorius
     def __init__(self, block_id, transactions, difficulty=3):
         self.block_id = block_id
-        self.previous_hash = None
+        self.prev_block_hash = None
         self.timestamp = aes_hashing(str(random.randint(1, 100000)).encode()).hex()  # Laiko antspaudas
         self.nonce = 0
+        self.version = 1
         self.difficulty = difficulty
 
         self.transactions = transactions
@@ -147,7 +148,6 @@ class Block:
             f"{self.version}"
             f"{self.prev_block_hash}"
             f"{self.timestamp}"
-            f"{self.merkle_root}"
             f"{self.nonce}"
             f"{self.difficulty}"
         )
