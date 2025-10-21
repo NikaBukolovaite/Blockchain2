@@ -4,7 +4,7 @@ Supaprastinta **blokų grandinė**, imituojanti UTXO modelį, transakcijų atran
 
 ---
 
-## 🧭 Turinys
+## Turinys
 
 - [Apžvalga](#apžvalga)
 - [Funkcijos](#funkcijos)

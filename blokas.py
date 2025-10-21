@@ -74,7 +74,7 @@ def generate_users(num_users=1000):
         public_key = aes_hashing(f"{name}{random.randint(1, 10000)}".encode()).hex()
         user = User(name, public_key)
         # vietoje fiksuotu 10 mazu UTXO – parenkame tiksline pradine suma [100..1_000_000] ir suskaidome i kelis UTXO
-        target_total = random.randint(100, 1_000_000)
+        target_total = random.randint(100, 1000000)
         if target_total < 1000:
             user.add_utxo(target_total)
         else:
