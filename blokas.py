@@ -1,5 +1,6 @@
 import random
 import sys
+import os
 from datetime import datetime  # realiam timestamp
 from Crypto.Cipher import AES
 
@@ -66,9 +67,7 @@ class User:
         self._balance = sum([value for _, value in self._utxos])
 
 # Vartotojų generavimas (~1000 vartotojų)
-def generate_users(num_users=1000, seed=None):
-    if seed is not None:
-        random.seed(seed)
+def generate_users(num_users=1000):
     users = []
     for i in range(num_users):
         name = f"User_{i+1}"
@@ -123,15 +122,11 @@ class Transaction:
         self.transaction_id = aes_hashing(tx_data).hex()
 
 # Transakcijų generavimas (~10 000)
-def generate_transactions(users, num_transactions=10000, seed=None):
-    if seed is not None:
-        random.seed(seed + 1337)
+def generate_transactions(users, num_transactions=10000):
     transactions = []
     for _ in range(num_transactions):
         sender = random.choice(users)
         receiver = random.choice(users)
-        if receiver is sender:
-            continue
         amount = random.randint(1, 1000)
         tx = Transaction(sender, receiver, amount)
         try:
@@ -162,7 +157,7 @@ class Block:
     def __init__(self, block_id, transactions, difficulty=3):
         self.block_id = block_id
         self.prev_block_hash = None
-        self.timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")  # Laiko antspaudas (reali data/laikas)
+        self.timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Laiko antspaudas (reali data/laikas)
         self.nonce = 0
         self.version = 1
         self.difficulty = difficulty
@@ -171,7 +166,7 @@ class Block:
         self.transactions = transactions
         self.hash = None
 
-    # padaro hash is bloko header'io 
+    # padaro hash is bloko header'io (6 pagrindiniai elementai iš užduoties)
     def calculate_hash(self):
         header = (
             f"{self.prev_block_hash}"
@@ -193,7 +188,7 @@ class Blockchain:
     # grazina paskutinio bloko hash'a
     def get_last_hash(self):
         if not self.chain:
-            return "0" * 32  # AES 16 baitų -> 32 hex simboliai
+            return "0" * 64
         return self.chain[-1].hash
 
     # prideda bloka i grandine
@@ -210,25 +205,48 @@ def create_new_block(transactions, block_id, prev_block_hash, block_size=100, di
     new_block.prev_block_hash = prev_block_hash
     return new_block, selected_transactions
 
+# funkcija irasymui i faila
+def write_block_to_file(block, filename="block_output.txt"):
+    with open(filename, "a", encoding="utf-8") as file:
+        file.write(f"Block ID: {block.block_id}\n")
+        file.write(f"Block Timestamp: {block.timestamp}\n")
+        file.write(f"Block Hash: {block.hash}\n\n")
+        for i, tx in enumerate(block.transactions):
+            file.write(f"Transaction {i+1}:\n")
+            file.write(f"  Sender: {tx.sender.name} -> Receiver: {tx.receiver.name}\n")
+            file.write(f"  Amount: {tx.amount}\n")
+            file.write(f"  Inputs: {tx.inputs}\n")
+            file.write(f"  Outputs: {tx.outputs}\n\n")
+        # konsolės išvedimas
+        print(f"Block ID: {block.block_id}")
+        print(f"Block Timestamp: {block.timestamp}")
+        print(f"Block Hash: {block.hash}")
+
+# funkcija irasanti i faila kasimo informacija
+def write_to_file_mining(mining_info, mining_log="mining_log.txt"):
+    with open(mining_log, "a", encoding="utf-8") as file:
+        file.write(f"{'=' * 60}\n")
+        file.write(f"MINING REPORT — Block ID: {mining_info['block_id']}\n")
+        file.write(f"Difficulty: {mining_info['difficulty']}\n")
+        file.write(f"Nonce: {mining_info['nonce']}\n")
+        file.write(f"Block Hash: {mining_info['hash']}\n")
+        file.write(f"{'=' * 60}\n\n")
+
 # maininimo funkcija (Proof-of-Work)
 def mine_blockchain(blockchain, transactions, block_size=100, difficulty=3,
-                    block_out_path="block_output.txt", mining_log_path="mining_log.txt",
-                    write_mode="overwrite"):
-    # failų režimas
-    file_mode = "w" if write_mode == "overwrite" else "a"
-
-    # išvalome failus, jei perrašymas
-    if file_mode == "w":
-        with open(block_out_path, "w", encoding="utf-8") as _:
-            pass
-        with open(mining_log_path, "w", encoding="utf-8") as _:
-            pass
+                    block_file="block_output.txt", mining_file="mining_log.txt",
+                    append_mode=False):
+    # Starto režimas: jei ne append_mode, failus perrašome tuščiai (trunc), po to — appendinam
+    if not append_mode:
+        open(block_file, "w", encoding="utf-8").close()
+        open(mining_file, "w", encoding="utf-8").close()
 
     block_id = len(blockchain.chain) + 1
 
     while transactions:
         new_block, selected = create_new_block(
-            transactions, block_id, blockchain.get_last_hash(), block_size=100, difficulty=difficulty
+            transactions, block_id, blockchain.get_last_hash(),
+            block_size=block_size, difficulty=difficulty
         )
 
         print(f"Kasamas blokas {new_block.block_id} su {len(new_block.transactions)} transakciju...")
@@ -240,134 +258,92 @@ def mine_blockchain(blockchain, transactions, block_size=100, difficulty=3,
                 break
             new_block.nonce += 1
 
+        # Atnaujiname gavėjų UTXO (paprastas modelis)
         for tx in new_block.transactions:
             tx.receiver.add_utxo(tx.amount)
 
-        # pašaliname iš viso sąrašo būtent pasirinktas transakcijas
+        # Pašaliname iš viso sąrašo būtent tas 100 pasirinktu transakcijų (ne pirmas 100)
         for tx in selected:
             transactions.remove(tx)
 
+        # Įtraukiame bloką į grandinę
         blockchain.add_block(new_block)
 
+        # Išsaugome kasimo informaciją
         mining_info = {
             "block_id": new_block.block_id,
             "nonce": new_block.nonce,
             "hash": new_block.hash,
             "difficulty": new_block.difficulty
         }
-        write_to_file_mining(mining_info, mining_log=mining_log_path, mode=file_mode)
-        write_block_to_file(new_block, filename=block_out_path, mode=file_mode)
+        write_to_file_mining(mining_info, mining_log=mining_file)
 
+        # Išrašome bloką į failą (kad matytųsi turinys)
+        write_block_to_file(new_block, filename=block_file)
+
+        # Einame prie kito ID
         block_id += 1
 
-# funkcija irasymui i faila
-def write_block_to_file(block, filename="block_output.txt", mode="a"):
-    with open(filename, mode, encoding="utf-8") as file:
-        file.write(f"Block ID: {block.block_id}\n")
-        file.write(f"Block Timestamp: {block.timestamp}\n")
-        file.write(f"Block Previous Hash: {block.prev_block_hash}\n")
-        file.write(f"Block Hash: {block.hash}\n")
-        file.write(f"Merkle Root: {block.merkle_root}\n\n")
-
-        for i, tx in enumerate(block.transactions):
-            file.write(f"Transaction {i+1}:\n")
-            file.write(f"  Sender: {tx.sender.name} -> Receiver: {tx.receiver.name}\n")
-            file.write(f"  Amount: {tx.amount}\n")
-            file.write(f"  Inputs: {tx.inputs}\n")
-            file.write(f"  Outputs: {tx.outputs}\n")
-            file.write(f"  TxID: {tx.transaction_id}\n\n")
-
-        # konsolės išvedimas
-        print(f"Block ID: {block.block_id}")
-        print(f"Block Timestamp: {block.timestamp}")
-        print(f"Block Previous Hash: {block.prev_block_hash}")
-        print(f"Block Hash: {block.hash}")
-        print(f"Merkle Root: {block.merkle_root}\n")
-
-# funkcija irasanti i faila kasimo informacija
-def write_to_file_mining(mining_info, mining_log="mining_log.txt", mode="a"):
-    with open(mining_log, mode, encoding="utf-8") as file:
-        file.write(f"{'=' * 60}\n")
-        file.write(f"MINING REPORT — Block ID: {mining_info['block_id']}\n")
-        file.write(f"Difficulty: {mining_info['difficulty']}\n")
-        file.write(f"Nonce: {mining_info['nonce']}\n")
-        file.write(f"Block Hash: {mining_info['hash']}\n")
-        file.write(f"{'=' * 60}\n\n")
-
-# flag'u parsinimas
 def parse_flags(argv):
-    params = {
-        "users": 1000,
-        "tx": 10000,
-        "difficulty": 3,
-        "block_size": 100,
-        "write": "overwrite",  # overwrite | append
-        "seed": None
-    }
-
-    if len(argv) <= 1:
-        print("Nepateikti flag'ai — naudojamos numatytos reikšmės.")
-        return params
-
-    raw_args = argv[1:]
-    flags = [a for a in raw_args if a.startswith("--")]
-    rest = [a for a in raw_args if not a.startswith("--")]
-
-    allowed = {"--users", "--tx", "--difficulty", "--block-size", "--write", "--seed"}
-    unknown = [f for f in flags if f.split("=")[0] not in allowed]
-    if unknown:
-        print("Nežinomi flag'ai:", ", ".join(unknown))
-        print("Bus ignoruojami. Galimi flag'ai: --users=N --tx=N --difficulty=N --block-size=N --write=append|overwrite --seed=N")
-
-    for f in flags:
-        key_val = f.split("=", 1)
-        key = key_val[0]
-        val = key_val[1] if len(key_val) == 2 else None
-        if key == "--users":
-            try: params["users"] = int(val)
-            except: print("Bloga --users reikšmė, naudojama numatyta (1000).")
-        elif key == "--tx":
-            try: params["tx"] = int(val)
-            except: print("Bloga --tx reikšmė, naudojama numatyta (10000).")
-        elif key == "--difficulty":
-            try: params["difficulty"] = int(val)
-            except: print("Bloga --difficulty reikšmė, naudojama numatyta (3).")
-        elif key == "--block-size":
-            try: params["block_size"] = int(val)
-            except: print("Bloga --block-size reikšmė, naudojama numatyta (100).")
-        elif key == "--write":
-            if val in ("append", "overwrite"):
-                params["write"] = val
-            else:
-                print("Bloga --write reikšmė, naudokite: append | overwrite. Naudojama numatyta (overwrite).")
-        elif key == "--seed":
-            try: params["seed"] = int(val)
-            except: print("Bloga --seed reikšmė, naudojama numatyta (None).")
-
-    if rest:
-        print("Nepanaudoti argumentai:", " ".join(rest))
-    return params
+    # Paprastas flag'ų parsinimas: --append, --overwrite, --users=N, --tx=N, --block-size=N, --difficulty=N
+    flags = { "append": False, "overwrite": True, "users": 1000, "tx": 10000, "block_size": 100, "difficulty": 3 }
+    for a in argv:
+        al = a.lower()
+        if al == "--append":
+            flags["append"] = True
+            flags["overwrite"] = False
+        elif al == "--overwrite":
+            flags["append"] = False
+            flags["overwrite"] = True
+        elif al.startswith("--users="):
+            try:
+                flags["users"] = int(al.split("=", 1)[1])
+            except:
+                print("Neteisinga --users reikšmė, naudosime numatytą: 1000")
+        elif al.startswith("--tx="):
+            try:
+                flags["tx"] = int(al.split("=", 1)[1])
+            except:
+                print("Neteisinga --tx reikšmė, naudosime numatytą: 10000")
+        elif al.startswith("--block-size="):
+            try:
+                flags["block_size"] = int(al.split("=", 1)[1])
+            except:
+                print("Neteisinga --block-size reikšmė, naudosime numatytą: 100")
+        elif al.startswith("--difficulty="):
+            try:
+                flags["difficulty"] = int(al.split("=", 1)[1])
+            except:
+                print("Neteisinga --difficulty reikšmė, naudosime numatytą: 3")
+        else:
+            if al.startswith("--"):
+                print(f"Nežinomas flag'as: {a} (ignoruojame)")
+    return flags
 
 def main():
-    params = parse_flags(sys.argv)
+    # Flag'ai
+    flags = parse_flags(sys.argv[1:])
+    append_mode = flags["append"]
+    users_n = flags["users"]
+    tx_n = flags["tx"]
+    block_size = flags["block_size"]
+    difficulty = flags["difficulty"]
 
     print("Generuojame vartotojus ir transakcijas...")
-    users = generate_users(num_users=params["users"], seed=params["seed"])
-    transactions = generate_transactions(users, num_transactions=params["tx"], seed=params["seed"])
+    users = generate_users(users_n)
+    transactions = generate_transactions(users, tx_n)
+    blockchain = Blockchain(difficulty=difficulty)
 
-    blockchain = Blockchain(difficulty=params["difficulty"])
-
+    # Visą srautą daro kasimo funkcija, kuri pati teisingai tvarko Block ID didėjimą.
     mine_blockchain(
         blockchain,
         transactions,
-        block_size=params["block_size"],
-        difficulty=params["difficulty"],
-        block_out_path="block_output.txt",
-        mining_log_path="mining_log.txt",
-        write_mode=params["write"]
+        block_size=block_size,
+        difficulty=difficulty,
+        block_file="block_output.txt",
+        mining_file="mining_log.txt",
+        append_mode=append_mode
     )
-
-    print("\nDarbas baigtas. Rezultatai: block_output.txt ir mining_log.txt")
 
 if __name__ == "__main__":
     main()
