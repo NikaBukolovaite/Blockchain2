@@ -73,10 +73,25 @@ def generate_users(num_users=1000):
         name = f"User_{i+1}"
         public_key = aes_hashing(f"{name}{random.randint(1, 10000)}".encode()).hex()
         user = User(name, public_key)
-        # Atsitiktinai pridedame 10 UTXO kiekvienam vartotojui
-        for _ in range(10):
-            amount = random.randint(100, 1000)
-            user.add_utxo(amount)
+        # vietoje fiksuotu 10 mazu UTXO – parenkame tiksline pradine suma [100..1_000_000] ir suskaidome i kelis UTXO
+        target_total = random.randint(100, 1_000_000)
+        if target_total < 1000:
+            user.add_utxo(target_total)
+        else:
+            # atsitiktinis UTXO kiekis (5–15), kad islaikyti realistiška „mozaika“
+            n_utxos = random.randint(5, 15)
+            remaining = target_total
+            for _ in range(n_utxos - 1):
+                # gabalas tarp ~1% ir ~20% likucio, bet ne maziau kaip 100
+                low = max(100, remaining // 100)
+                high = max(low, remaining // 5)
+                chunk = random.randint(low, high)
+                remaining -= chunk
+                user.add_utxo(chunk)
+                if remaining <= 100:
+                    break
+            if remaining > 0:
+                user.add_utxo(remaining)
         users.append(user)
     return users
 
@@ -89,8 +104,38 @@ class Transaction:
         self.inputs = []
         self.outputs = []
         self.transaction_id = None
+        # pridėtas tx_nonce, kad id būtų sunkiau koliduoti bei patogiau validacijai
+        self.tx_nonce = random.randint(1, 1000000000)
+
+    def _compute_tx_id(self):
+        # skaičiuojame hash nuo VISKO: sender_pk, receiver_pk, amount, tx_nonce, surikiuoti inputs/outputs
+        sender_pk = self.sender.public_key
+        receiver_pk = self.receiver.public_key
+
+        # surikiuojame inputs pagal UTXO id
+        sorted_inputs = sorted(self.inputs, key=lambda x: x[0])  # (utxo_id, utxo_value)
+        # surikiuojame outputs pagal (pk, amount)
+        sorted_outputs = sorted(self.outputs, key=lambda x: (x[0], x[1]))  # (pk, amount)
+
+        parts = []
+        parts.append(f"sender={sender_pk}")
+        parts.append(f"receiver={receiver_pk}")
+        parts.append(f"amount={self.amount}")
+        parts.append(f"tx_nonce={self.tx_nonce}")
+        parts.append("inputs=[")
+        for utxo_id, utxo_val in sorted_inputs:
+            parts.append(f"{utxo_id}:{utxo_val}")
+        parts.append("]")
+        parts.append("outputs=[")
+        for pk, val in sorted_outputs:
+            parts.append(f"{pk}:{val}")
+        parts.append("]")
+
+        serialized = "|".join(parts).encode()
+        return aes_hashing(serialized).hex()
 
     def generate_transaction(self):
+        # pakeista logika: čia UTXO NEUŽRAŠOM – tik parenkame inputs ir suformuojame outputs (įskaitant grąžą)
         remaining_amount = self.amount
         available_utxos = self.sender.get_utxos()
         total_utxo_value = sum(value for _, value in available_utxos)
@@ -99,27 +144,29 @@ class Transaction:
             print(f"Siuntėjas {self.sender.name} turi tik {total_utxo_value} pinigų, bet reikia {self.amount}.")
             raise ValueError("Siuntėjas neturi pakankamai pinigų.")
 
-        used_utxos = []
+        used = []
+        acc = 0
         for utxo, value in available_utxos:
-            if remaining_amount <= 0:
+            used.append((utxo, value))
+            acc += value
+            if acc >= remaining_amount:
                 break
-            if value >= remaining_amount:
-                self.inputs.append((utxo, remaining_amount))
-                self.outputs.append((self.receiver.public_key, remaining_amount))
-                used_utxos.append(utxo)
-                remaining_amount = 0
-            else:
-                self.inputs.append((utxo, value))
-                self.outputs.append((self.receiver.public_key, value))
-                used_utxos.append(utxo)
-                remaining_amount -= value
 
-        # Išimame panaudotus UTXO
-        self.sender.remove_utxos(used_utxos)
+        if acc < remaining_amount:
+            print(f"Siuntėjas {self.sender.name} turi tik {total_utxo_value} pinigų, bet reikia {self.amount}.")
+            raise ValueError("Siuntėjas neturi pakankamai pinigų.")  # papildoma sauga
 
-        # transaction_id (kitų laukų hash) – naudojame AES-hash
-        tx_data = f"{self.sender.public_key}{self.receiver.public_key}{self.amount}".encode()
-        self.transaction_id = aes_hashing(tx_data).hex()
+        # inputs = sunaudojame pilnus UTXO (klasikinis UTXO modelis)
+        self.inputs = used[:]  # [(utxo_id, utxo_value), ...]
+
+        # outputs = 1) gavėjui visa suma 2) siuntėjui grąža (jei liko)
+        change = acc - remaining_amount
+        self.outputs = [(self.receiver.public_key, self.amount)]
+        if change > 0:
+            self.outputs.append((self.sender.public_key, change))
+
+        # transaction_id (pilna informacija)
+        self.transaction_id = self._compute_tx_id()
 
 # Transakcijų generavimas (~10 000)
 def generate_transactions(users, num_transactions=10000):
@@ -146,7 +193,9 @@ def calculate_merkle_root(transactions):
             tx_hashes.append(tx_hashes[-1])
         new_level = []
         for i in range(0, len(tx_hashes), 2):
-            combined = (tx_hashes[i] + tx_hashes[i + 1]).encode()
+            left = bytes.fromhex(tx_hashes[i])
+            right = bytes.fromhex(tx_hashes[i + 1])
+            combined = left + right
             new_level.append(aes_hashing(combined).hex())
         tx_hashes = new_level
     return tx_hashes[0]
@@ -166,7 +215,7 @@ class Block:
         self.transactions = transactions
         self.hash = None
 
-    # padaro hash is bloko header'io (6 pagrindiniai elementai iš užduoties)
+    # padaro hash is bloko header'io
     def calculate_hash(self):
         header = (
             f"{self.prev_block_hash}"
@@ -233,13 +282,15 @@ def write_to_file_mining(mining_info, mining_log="mining_log.txt"):
         file.write(f"{'=' * 60}\n\n")
 
 # maininimo funkcija (Proof-of-Work)
-def mine_blockchain(blockchain, transactions, block_size=100, difficulty=3,
+def mine_blockchain(blockchain, transactions, users, block_size=100, difficulty=3,
                     block_file="block_output.txt", mining_file="mining_log.txt",
                     append_mode=False):
-    # Starto režimas: jei ne append_mode, failus perrašome tuščiai (trunc), po to — appendinam
     if not append_mode:
         open(block_file, "w", encoding="utf-8").close()
         open(mining_file, "w", encoding="utf-8").close()
+
+    # greitas žemėlapis: public_key -> User (kad outputs būtų galima priskirti adresatams)
+    pk_index = {u.public_key: u for u in users}
 
     block_id = len(blockchain.chain) + 1
 
@@ -258,9 +309,29 @@ def mine_blockchain(blockchain, transactions, block_size=100, difficulty=3,
                 break
             new_block.nonce += 1
 
-        # Atnaujiname gavėjų UTXO (paprastas modelis)
+        # Atnaujiname UTXO tik PO kasimo
         for tx in new_block.transactions:
-            tx.receiver.add_utxo(tx.amount)
+            # patikriname, kad visi inputs UTXO vis dar egzistuoja pas siuntėją
+            sender = tx.sender
+            sender_utxos = dict(sender.get_utxos())  # {utxo_id: value}
+            input_ids = [u for (u, v) in tx.inputs]
+            missing = [uid for uid in input_ids if uid not in sender_utxos]
+            if missing:
+                # jei UTXO nebeliko – praleidžiam šią TX be valstybės keitimo
+                print(f"ĮSPĖJIMAS: TX praleista (nebėra input UTXO). Siuntėjas={sender.name}")
+                continue
+
+            # nuimame sunaudotus UTXO pilnai
+            sender.remove_utxos(set(input_ids))
+
+            # pridedame outputs kaip naujus UTXO adresatams (gavėjas + galimai grąža siuntėjui)
+            for (pk, val) in tx.outputs:
+                user = pk_index.get(pk, None)
+                if user is not None:
+                    user.add_utxo(val)
+                else:
+                    # neturėtume čia patekti (visi pk priklauso users), bet paliekame saugą
+                    print("ĮSPĖJIMAS: nerastas user pagal public_key, praleidžiam output.")
 
         # Pašaliname iš viso sąrašo būtent tas 100 pasirinktu transakcijų (ne pirmas 100)
         for tx in selected:
@@ -338,6 +409,7 @@ def main():
     mine_blockchain(
         blockchain,
         transactions,
+        users,  # perduodame users, kad outputs būtų galima priskirti pagal public_key
         block_size=block_size,
         difficulty=difficulty,
         block_file="block_output.txt",
