@@ -57,14 +57,14 @@ projekto_aplankas/
 **Konsolės eiga (kasimas):**
 
 <p align="center">
-  <img src="docs/images/mining_console.png" alt="Kasimo eiga – konsolė" width="780" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/konsole.png" alt="Kasimo eiga – konsolė" width="780" />
 </p>
 
 **Failų išvestys:**
 
 <div align="center">
-  <img src="docs/images/mining_log_excerpt.png" alt="mining_log.txt ištrauka" width="380" />
-  <img src="docs/images/block_output_excerpt.png" alt="block_output.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
+  <img src="dhttps://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
 </div>
 
 ---
