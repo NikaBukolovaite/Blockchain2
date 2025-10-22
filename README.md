@@ -116,8 +116,7 @@ python src/cli.py --users=1000 --tx=10000 --block-size=100 --difficulty=3 --over
   `--append --overwrite` ⇒ **perrašys** failus;  
   `--overwrite --append` ⇒ **pridės** prie esamų failų.
 
-> Pastaba: loginės ribos šiuo metu netikrinamos (tik ar reikšmė paverčiama į `int`).  
-> Pvz., `--block-size=0` ar `--difficulty=-1` gali turėti nepageidaujamų pasekmių (ar net sukelti klaidą formuojant bloką). Jei reikia, pridėkite ribų tikrinimą (pvz., `>= 1`).
+> Pastaba: loginės ribos šiuo metu netikrinamos (tik ar reikšmė paverčiama į `int`).
 
 ### Pavyzdžiai
 
