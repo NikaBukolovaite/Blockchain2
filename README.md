@@ -56,7 +56,7 @@ projekto_aplankas/
 **Konsolės eiga (kasimas):**
 
 <p align="center">
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/konsole.png" alt="Kasimo eiga – konsolė" width="780" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/38d2bb4064782d62a14e0ba4ae7b1b24d9b7e0de/imagines/konsole%20(2).png" alt="Kasimo eiga – konsolė" width="780" />
 </p>
 
 **Failų išvestys:**
