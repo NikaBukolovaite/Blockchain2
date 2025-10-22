@@ -62,13 +62,13 @@ projekto_aplankas/
 
 **Failų išvestys:**
 
-<div align="center">
+<p align="center">
   <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
-</div>
+</p>
 
-<div align="center">
+<p align="center">
   <img src="dhttps://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
-</div>
+</p>
 
 ---
 
