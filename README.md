@@ -6,8 +6,6 @@ Supaprastinta **blokų grandinė**, imituojanti UTXO modelį, transakcijų atran
 
 # Blockchain v1.0
 
----
-
 ## Turinys
 
 - [Apžvalga](#apžvalga)
