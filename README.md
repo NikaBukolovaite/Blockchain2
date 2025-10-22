@@ -12,8 +12,7 @@ Supaprastinta **blokų grandinė**, imituojanti UTXO modelį, transakcijų atran
 - [Funkcijos](#funkcijos)
 - [Ekrano nuotraukos ir demonstracija](#ekrano-nuotraukos-ir-demonstracija)
 - [Architektūra](#architektūra)
-- [Programos diegimas](#programos-diegimas)
-- [Paleidimas](#paleidimas)
+- [Programos paleidimas](#programos-paleidimas)
 - [Neteisingų flag'ų atvejai](#neteisingų-flagų-atvejai)
 - [Konfigūracija (CLI flag'ai)](#konfigūracija-cli-flagai)
 - [Rezultatai ir log'ai](#rezultatai-ir-logai)
@@ -80,11 +79,7 @@ projekto_aplankas/
 
 ---
 
-## Programos diegimas
-
-**Reikalavimai:**
-
-## Paleidimas
+## Programos paleidimas
 
 Paleisti programą su default nustatymais galima į konsolę įvedus:
 
