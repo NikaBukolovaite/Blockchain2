@@ -4,8 +4,17 @@ from chain import Blockchain
 from mining import mine_blockchain
 
 def parse_flags(argv):
-    # Paprastas flag'ų parsinimas: --append, --overwrite, --users=N, --tx=N, --block-size=N, --difficulty=N
-    flags = { "append": False, "overwrite": True, "users": 1000, "tx": 10000, "block_size": 100, "difficulty": 3 }
+    # Paprastas flag'ų parsinimas: --append, --overwrite, --users=N, --tx=N, --block-size=N, --difficulty=N, --print-txs, --tx-preview=N
+    flags = {
+        "append": False,
+        "overwrite": True,
+        "users": 1000,
+        "tx": 10000,
+        "block_size": 100,
+        "difficulty": 3,
+        "print_txs": False,  # jei True – visos TX bus spausdinamos konsolėje
+        "tx_preview": 3      # jei print_txs=False – tiek pirmų TX spausdinti
+    }
     for a in argv:
         al = a.lower()
         if al == "--append":
@@ -34,6 +43,13 @@ def parse_flags(argv):
                 flags["difficulty"] = int(al.split("=", 1)[1])
             except:
                 print("Neteisinga --difficulty reikšmė, naudosime numatytą: 3")
+        elif al == "--print-txs":
+            flags["print_txs"] = True
+        elif al.startswith("--tx-preview="):
+            try:
+                flags["tx_preview"] = int(al.split("=", 1)[1])
+            except:
+                print("Neteisinga --tx-preview reikšmė, naudosime numatytą: 3")
         else:
             if al.startswith("--"):
                 print(f"Nežinomas flag'as: {a} (ignoruojame)")
@@ -62,7 +78,9 @@ def main():
         difficulty=difficulty,
         block_file="block_output.txt",
         mining_file="mining_log.txt",
-        append_mode=append_mode
+        append_mode=append_mode,
+        print_txs=flags["print_txs"],
+        tx_preview=flags["tx_preview"]
     )
 
 if __name__ == "__main__":

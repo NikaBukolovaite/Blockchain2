@@ -46,8 +46,8 @@ projekto_aplankas/
 - **Merkle root** su poravimu ir dubliavimu nelyginiam kiekiui.
 - **PoW kasimas** su `difficulty` nuliais hash pradžioje.
 - **Dviginės panaudos prevencija** kasimo metu (tikrinami įėjimo UTXO egzistavimai).
-- **Žurnalai**: konsolėje ir tekstiniuose failuose.
-- Pasirenkamas transakcijų „dump'as“ į failą (jei įjungta).
+- **Išvedimai**: konsolėje ir tekstiniuose failuose.
+- **Konsolės peržiūra**: po kiekvieno bloko į konsolę išvedamos pirmos N transakcijų (numatytai N=3) arba visos, jei taip nurodoma flag’u.
 
 ---
 
@@ -147,6 +147,8 @@ python src/cli.py --append --overwrite
 | `--difficulty=INT` | PoW sudėtingumas (nuliai hash pradžioje) |         `3` | `3` → `000…` prefiksas                         |
 | `--append`         | Rašyti **pridedant** prie failų          |           — | Jei nenurodyta – veikia kaip `--overwrite`     |
 | `--overwrite`      | Failus **perrašyti** nuo tuščio          | **įjungta** |                                                |
+| `--print-txs`      | Į konsolę spausdinti **visas** TX        |           — | Jei nenaudojamas – rodomas tik **preview**     |
+| `--tx-preview=INT` | Į konsolę spausdinti **pirmas N** TX     |         `3` | Ignoruojama, jei naudojamas `--print-txs`      |
 
 ---
 
@@ -154,13 +156,21 @@ python src/cli.py --append --overwrite
 
 - **`mining_log.txt`** – kasimo ataskaitos (Block ID, Difficulty, Nonce, Block Hash).
 - **`block_output.txt`** – blokų santrauka (ID, Timestamp, Hash) ir – jei įjungta – transakcijų detalės.
-- **Konsolė** – eiga („Kasamas blokas…“, „Blokas iškastas!“) + perspėjimai (pvz., dėl dvigubų panaudų).
+- **Konsolė** – eiga („Kasamas blokas…“, „Blokas iškastas!“), perspėjimai (pvz., dėl dvigubų panaudų) ir transakcijų peržiūra:
+  - numatytai – pirmos 3 kiekvieno bloko transakcijos,
+  - su --tx-preview=N – pirmos N,
+  - su --print-txs – visos.
 
 **Greitas pavyzdys:**
 
 ```bash
 Kasamas blokas 1 su 100 transakciju...
 Blokas iskastas! Nonce=48217 Hash=000a4f2c...e19
+  Transakcijų peržiūra (pirmos 3 iš 100):
+  TX#1: User_12 -> User_401, amount=327
+    Inputs:  [...]
+    Outputs: [...]
+  TX#2: ...
 ```
 
 ---
@@ -250,6 +260,7 @@ Po sėkmingo kasimo — **tik tada** — pritaikomi kandidatiniai pakeitimai:
 6. **Išvestis**
    - `mining_log.txt` — `Block ID`, `Difficulty`, `Nonce`, `Block Hash`.
    - `block_output.txt` — bloko santrauka ir (pasirinktinai) detali transakcijų informacija.
+   - **Konsolė** — po kiekvieno bloko: transakcijų peržiūra (N pirmų arba visos, pagal flag’us).
 
 ---
 

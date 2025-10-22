@@ -17,6 +17,32 @@ def write_block_to_file(block, filename="block_output.txt"):
         print(f"Block Timestamp: {block.timestamp}")
         print(f"Block Hash: {block.hash}")
 
+# transakcijų išvedimas į konsolę (pilnas arba „preview“)
+def print_block_txs_to_console(block, print_all: bool = False, preview_count: int = 3):
+
+    if not block.transactions:
+        print("  (Šiame bloke nėra transakcijų)")
+        return
+
+    if print_all:
+        print(f"  Transakcijos (viso: {len(block.transactions)}):")
+        for i, tx in enumerate(block.transactions, 1):
+            print(f"  TX#{i}: {tx.sender.name} -> {tx.receiver.name}, amount={tx.amount}")
+            print(f"    Inputs:  {tx.inputs}")
+            print(f"    Outputs: {tx.outputs}")
+        return
+
+    # preview režimas
+    count = min(preview_count, len(block.transactions))
+    print(f"  Transakcijų peržiūra (pirmos {count} iš {len(block.transactions)}):")
+    for i in range(count):
+        tx = block.transactions[i]
+        print(f"  TX#{i+1}: {tx.sender.name} -> {tx.receiver.name}, amount={tx.amount}")
+        print(f"    Inputs:  {tx.inputs}")
+        print(f"    Outputs: {tx.outputs}")
+    if len(block.transactions) > count:
+        print(f"  … ir dar {len(block.transactions) - count} transakcijų (pilna versija: block_output.txt)")
+
 # funkcija irasanti i faila kasimo informacija
 def write_to_file_mining(mining_info, mining_log="mining_log.txt"):
     with open(mining_log, "a", encoding="utf-8") as file:
@@ -30,7 +56,9 @@ def write_to_file_mining(mining_info, mining_log="mining_log.txt"):
 # maininimo funkcija (Proof-of-Work)
 def mine_blockchain(blockchain, transactions, users, block_size=100, difficulty=3,
                     block_file="block_output.txt", mining_file="mining_log.txt",
-                    append_mode=False):
+                    append_mode=False,
+                    print_txs=False,            # jei True – spausdina visas TX į konsolę
+                    tx_preview=3):              # jei print_txs=False – spausdina tiek pirmų TX
     if not append_mode:
         open(block_file, "w", encoding="utf-8").close()
         open(mining_file, "w", encoding="utf-8").close()
@@ -55,7 +83,7 @@ def mine_blockchain(blockchain, transactions, users, block_size=100, difficulty=
                 break
             new_block.nonce += 1
 
-        # Atnaujiname UTXO tik PO kasimo
+        # Atnaujiname UTXO tik PO KASIMO
         for tx in new_block.transactions:
             # patikriname, kad visi inputs UTXO vis dar egzistuoja pas siuntėją
             sender = tx.sender
@@ -97,6 +125,12 @@ def mine_blockchain(blockchain, transactions, users, block_size=100, difficulty=
 
         # Išrašome bloką į failą (kad matytųsi turinys)
         write_block_to_file(new_block, filename=block_file)
+
+        print_block_txs_to_console(
+            new_block,
+            print_all=print_txs,
+            preview_count=tx_preview
+        )
 
         # Einame prie kito ID
         block_id += 1
