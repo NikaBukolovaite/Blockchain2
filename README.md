@@ -1,6 +1,10 @@
-# 💻 Blockchain (v1.0 / v0.1)
+# 💻 Blockchain
 
 Supaprastinta **blokų grandinė**, imituojanti UTXO modelį, transakcijų atranką į blokus, Merkle šaknį ir Proof‑of‑Work (PoW) kasimą. Visos maišos daromos su užduotyje pateikta **AES pagrindu sukurta maišos funkcija**.
+
+---
+
+# Blockchain v1.0
 
 ---
 
