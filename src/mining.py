@@ -1,4 +1,4 @@
-from chain import create_new_block
+from src.chain import create_new_block
 
 # funkcija irasymui i faila
 def write_block_to_file(block, filename="block_output.txt"):

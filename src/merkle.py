@@ -1,4 +1,4 @@
-from hashing import aes_hashing
+from src.hashing import aes_hashing
 
 # funkcija Merkle Root Hash apskaiciavimui
 def calculate_merkle_root(transactions):

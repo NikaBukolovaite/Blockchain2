@@ -1,5 +1,5 @@
 import random
-from hashing import aes_hashing
+from src.hashing import aes_hashing
 
 # Vartotojas su UTXO
 class User:

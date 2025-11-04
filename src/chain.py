@@ -1,5 +1,5 @@
 import random
-from block import Block
+from src.block import Block
 
 # Blockchain
 class Blockchain:

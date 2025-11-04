@@ -1,6 +1,7 @@
+import hashlib
 from datetime import datetime  # realiam timestamp
-from hashing import aes_hashing
-from merkle import calculate_merkle_root
+from src.hashing import aes_hashing
+from src.merkle import calculate_merkle_root
 
 # Blokas
 class Block:
@@ -28,3 +29,4 @@ class Block:
             f"{self.difficulty}"
         )
         return aes_hashing(header.encode()).hex()
+
