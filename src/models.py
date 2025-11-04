@@ -126,6 +126,10 @@ class Transaction:
         # transaction_id (pilna informacija)
         self.transaction_id = self._compute_tx_id()
 
+    def validate_transaction_id(self):
+        id_validation = self._compute_tx_id()
+        return id_validation == self.transaction_id
+
 # Transakcijų generavimas (~10 000)
 def generate_transactions(users, num_transactions=10000):
     transactions = []
@@ -136,6 +140,8 @@ def generate_transactions(users, num_transactions=10000):
         tx = Transaction(sender, receiver, amount)
         try:
             tx.generate_transaction()
+            if not tx.validate_transaction_id():
+                raise ValueError(f"Transakcijos ID neteisingas: {tx.transaction_id}")
             transactions.append(tx)
         except ValueError as e:
             print(f"Transakcija nepavyko: {e}")
