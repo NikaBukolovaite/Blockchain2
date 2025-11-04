@@ -69,19 +69,38 @@ class TestTransaction(unittest.TestCase):
             txs[0].amount = 9999
             root2 = calculate_merkle_root(txs)
             self.assertNotEqual(root1, root2)
-class TestBlockAndBlockchain(unittest.TestCase):
-    def test_block_integration(self):
-        users = generate_users(10)
-        txs = generate_transactions(users, num_transactions=10)
-        blockchain = Blockchain(difficulty=1)
-        block = Block(1, txs, difficulty=1)
+class TestProofOfWorkLogic(unittest.TestCase):
+    def test_pow_logic_changes_with_nonce(self):
+        users = generate_users(5)
+        txs = generate_transactions(users, num_transactions=5)
+        difficulty = 2
+        blockchain = Blockchain(difficulty=difficulty)
+        block = Block(1, txs, difficulty=difficulty)
         block.prev_block_hash = blockchain.get_last_hash()
-        block.hash = block.calculate_hash()
-        blockchain.add_block(block)
+        first_hash = block.calculate_hash()
+        block.nonce += 1
+        second_hash = block.calculate_hash()
+        self.assertNotEqual(first_hash, second_hash, "Hash turi keistis keičiant nonce")
+        start_nonce = block.nonce
+        iterations = 0
+        max_iterations = 5000
 
-        self.assertEqual(len(blockchain.chain), 1)
+        while True:
+            block.hash = block.calculate_hash()
+            iterations += 1
+            if block.hash.startswith("0" * block.difficulty):
+                break
+            block.nonce += 1
+            if iterations > max_iterations:
+                self.fail("Proof-of-Work ciklas per ilgas (greičiausiai logikos klaida)")
+
+        self.assertTrue(block.hash.startswith("0" * block.difficulty) or block.difficulty < 2)
+        self.assertGreater(block.nonce, start_nonce)
         self.assertIsNotNone(block.merkle_root)
-        self.assertTrue(block.hash.startswith("0" * block.difficulty))
+        self.assertEqual(len(blockchain.chain), 0, "Blokas dar nepridėtas prie grandinės")
+        blockchain.add_block(block)
+        self.assertEqual(len(blockchain.chain), 1)
+        self.assertEqual(blockchain.chain[0].hash, block.hash)
 
 
 
