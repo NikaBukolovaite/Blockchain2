@@ -1,3 +1,5 @@
+from datetime import time
+
 from src.chain import create_new_block
 
 # funkcija irasymui i faila
@@ -134,3 +136,72 @@ def mine_blockchain(blockchain, transactions, users, block_size=100, difficulty=
 
         # Einame prie kito ID
         block_id += 1
+
+def distributed_mining(blockchain, transactions, users, block_size=100, difficulty=3,
+                         num_candidates=5, max_attempts=10000,
+                         block_file="block_output.txt", mining_file="mining_log.txt"):
+    if not transactions:
+        print("nera transakciju kasimui")
+        return
+
+    pk_index = {u.public_key: u for u in users}
+    block_id = len(blockchain.chain) + 1
+
+    candidate_blocks = []
+    for i in range(num_candidates):
+        candidate, selected = create_new_block(
+            transactions, block_id + i, blockchain.get_last_hash(),
+            block_size=block_size, difficulty=difficulty
+        )
+        candidate_blocks.append((candidate, selected))
+
+    print(f"Sukurta {num_candidates} kandidatinių blokų, pradedamas kasimas...")
+    winners = None
+    attempts = 0
+    while  attempts < max_attempts:
+        for candidate, _ in candidate_blocks:
+            candidate.hash = candidate.calculate_hash()
+            if candidate.hash.startswith("0" * difficulty):
+                winner = candidate
+                break
+            candidate.nonce += 1
+        attempts += 1
+        if winner:
+            break
+    if winner:
+        print(f"Block #{winner.block_id} mined. Attempts = {attempts}. Nonce = {winner.nonce}")
+        blockchain.add_block(winner)
+    else:
+        print("No block was mined, trying to increase attempts")
+        return distributed_mining(
+            blockchain, transactions, users,
+            block_size=block_size,
+            difficulty=difficulty,
+            num_candidates=num_candidates,
+            max_attempts=max_attempts * 2,
+            block_file=block_file,
+            mining_file=mining_file
+        )
+    winner_selected = None
+    for c, selected in candidate_blocks:
+        if c is winner:
+            winner_selected = selected
+            break
+
+    if winner_selected:
+        for tx in winner_selected:
+            sender = tx.sender
+            input_ids = [u for (u, v) in tx.inputs]
+            sender.remove_utxos(set(input_ids))
+
+            for (pk, val) in tx.outputs:
+                user = pk_index.get(pk, None)
+                if user:
+                    user.add_utxo(val)
+
+        for tx in winner_selected:
+            if tx in transactions:
+                transactions.remove(tx)
+    print(f"Block #{winner.block_id} added to chain. Chain length = {len(blockchain.chain)}")
+
+
