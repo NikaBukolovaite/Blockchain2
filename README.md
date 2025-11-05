@@ -66,23 +66,23 @@ projekto_aplankas/
 **Konsolės eiga (kasimas):**
 
 <div align="center">
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234453.png" alt="Konsolės ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234506.png" alt="Konsolės ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234732.png" alt="Konsolės ištrauka, kai lygiagretus kasimas" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234751.png" alt="Konsolės ištrauka, kai lygiagretus kasimas" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234809.png" alt="Konsolės ištrauka, kai paleidžiami Unit testai" width="380" />
   <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
 </div>
 
 **Failų išvestys:**
 
 <div align="center">
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234916.png" alt="sequential_block_output.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234924.png" alt="sequential_mining_log ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234846.png" alt="parallel_block_output.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234856.png" alt="parallel_mining_log.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234821.png" alt="block_output.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234829.png" alt="mining_log.txt ištrauka" width="380" />
 </div>
 
 ---
