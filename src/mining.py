@@ -1,4 +1,5 @@
-from datetime import time
+import os
+from concurrent.futures import ProcessPoolExecutor, FIRST_COMPLETED, wait
 
 from src.chain import create_new_block
 
@@ -86,6 +87,7 @@ def mine_blockchain(blockchain, transactions, users, block_size=100, difficulty=
             new_block.nonce += 1
 
         # Atnaujiname UTXO tik PO KASIMO
+        included = 0
         for tx in new_block.transactions:
             # patikriname, kad visi inputs UTXO vis dar egzistuoja pas siuntėją
             sender = tx.sender
@@ -108,10 +110,12 @@ def mine_blockchain(blockchain, transactions, users, block_size=100, difficulty=
                 else:
                     # neturėtume čia patekti (visi pk priklauso users), bet paliekame saugą
                     print("ĮSPĖJIMAS: nerastas user pagal public_key, praleidžiam output.")
+            included += 1
 
         # Pašaliname iš viso sąrašo būtent tas 100 pasirinktu transakcijų (ne pirmas 100)
         for tx in selected:
-            transactions.remove(tx)
+            if tx in transactions:
+                transactions.remove(tx)
 
         # Įtraukiame bloką į grandinę
         blockchain.add_block(new_block)
@@ -128,48 +132,115 @@ def mine_blockchain(blockchain, transactions, users, block_size=100, difficulty=
         # Išrašome bloką į failą (kad matytųsi turinys)
         write_block_to_file(new_block, filename=block_file)
 
+        # Konsolės „preview“ – vienodas UX
         print_block_txs_to_console(
             new_block,
             print_all=print_txs,
             preview_count=tx_preview
         )
 
+        # SUMMARY: aiški santrauka dėstytojui
+        print(f"[SUMMARY] Block #{new_block.block_id} mined at difficulty={new_block.difficulty}")
+        print(f"[SUMMARY] Hash={new_block.hash}, nonce={new_block.nonce}")
+        print(f"[SUMMARY] Included TXs: {included}, mempool left: {len(transactions)}")
+        print(f"[SUMMARY] Chain length: {len(blockchain.chain)}\n")
+
         # Einame prie kito ID
         block_id += 1
 
+def _mine_candidate_worker(prev_hash: str, timestamp: str, version: int,
+                           merkle_root: str, difficulty: int,
+                           start_nonce: int, max_attempts: int):
+    from src.hashing import aes_hashing
+    nonce = start_nonce
+    for attempts in range(1, max_attempts + 1):
+        header = f"{prev_hash}{timestamp}{version}{merkle_root}{nonce}{difficulty}"
+        h = aes_hashing(header.encode()).hex()
+        if h.startswith("0" * difficulty):
+            return True, nonce, attempts, h
+        nonce += 1
+    return False, None, max_attempts, None
+
 def distributed_mining(blockchain, transactions, users, block_size=100, difficulty=3,
                          num_candidates=5, max_attempts=10000,
-                         block_file="block_output.txt", mining_file="mining_log.txt"):
+                         block_file="block_output.txt", mining_file="mining_log.txt",
+                         workers=None,
+                         print_txs=False,            # preview/vistos TX konsolėje
+                         tx_preview=3):              # kiek rodyti per preview
     if not transactions:
         print("nera transakciju kasimui")
         return
 
+    if workers is None:
+        workers = max(1, min(num_candidates, (os.cpu_count() or 1)))
+
     pk_index = {u.public_key: u for u in users}
+
+    # VIENODAS block_id VISIEMS KANDIDATAMS
     block_id = len(blockchain.chain) + 1
 
     candidate_blocks = []
-    for i in range(num_candidates):
+    for _ in range(num_candidates):
         candidate, selected = create_new_block(
-            transactions, block_id + i, blockchain.get_last_hash(),
+            transactions, block_id, blockchain.get_last_hash(),
             block_size=block_size, difficulty=difficulty
         )
         candidate_blocks.append((candidate, selected))
 
-    print(f"Sukurta {num_candidates} kandidatinių blokų, pradedamas kasimas...")
+    print(f"Sukurta {num_candidates} kandidatinių blokų, pradedamas LYGIAGRETUS kasimas ({workers} proc.)...")
     winner = None
-    attempts = 0
-    while  attempts < max_attempts:
+    winner_selected = None
+
+    futures = []
+    with ProcessPoolExecutor(max_workers=workers) as ex:
         for candidate, _ in candidate_blocks:
-            candidate.hash = candidate.calculate_hash()
-            if candidate.hash.startswith("0" * difficulty):
+            futures.append(
+                ex.submit(
+                    _mine_candidate_worker,
+                    candidate.prev_block_hash,
+                    candidate.timestamp,
+                    getattr(candidate, "version", 1),
+                    candidate.merkle_root,
+                    candidate.difficulty,
+                    0,
+                    max_attempts
+                )
+            )
+
+        done, _ = wait(futures, return_when=FIRST_COMPLETED)
+        found_any = False
+        for fut in done:
+            try:
+                found, nonce, attempts, h = fut.result()
+            except Exception:
+                continue
+            if found:
+                idx = futures.index(fut)
+                candidate, selected = candidate_blocks[idx]
+                candidate.nonce = nonce
+                candidate.hash = h
                 winner = candidate
+                winner_selected = selected
+                print(f"Block #{winner.block_id} mined. Attempts = {attempts}. Nonce = {winner.nonce}")
+                found_any = True
                 break
-            candidate.nonce += 1
-        attempts += 1
-        if winner:
-            break
+
+        if not found_any:
+            print("No block was mined, trying to increase attempts")
+            return distributed_mining(
+                blockchain, transactions, users,
+                block_size=block_size,
+                difficulty=difficulty,
+                num_candidates=num_candidates,
+                max_attempts=max_attempts * 2,
+                block_file=block_file,
+                mining_file=mining_file,
+                workers=workers,
+                print_txs=print_txs,
+                tx_preview=tx_preview
+            )
+
     if winner:
-        print(f"Block #{winner.block_id} mined. Attempts = {attempts}. Nonce = {winner.nonce}")
         blockchain.add_block(winner)
     else:
         print("No block was mined, trying to increase attempts")
@@ -180,14 +251,14 @@ def distributed_mining(blockchain, transactions, users, block_size=100, difficul
             num_candidates=num_candidates,
             max_attempts=max_attempts * 2,
             block_file=block_file,
-            mining_file=mining_file
+            mining_file=mining_file,
+            workers=workers,
+            print_txs=print_txs,
+            tx_preview=tx_preview
         )
-    winner_selected = None
-    for c, selected in candidate_blocks:
-        if c is winner:
-            winner_selected = selected
-            break
-#sita dalis padaryta su DI pagalba
+
+    # UTXO atnaujinimas + pašalinimas iš mempool (tik laimėtojo bloko TX)
+    included = 0
     if winner_selected:
         for tx in winner_selected:
             sender = tx.sender
@@ -198,10 +269,32 @@ def distributed_mining(blockchain, transactions, users, block_size=100, difficul
                 user = pk_index.get(pk, None)
                 if user:
                     user.add_utxo(val)
-#baigiasi dalis, padaryta su DI pagalba
+            included += 1
+
         for tx in winner_selected:
             if tx in transactions:
                 transactions.remove(tx)
-    print(f"Block #{winner.block_id} added to chain. Chain length = {len(blockchain.chain)}")
 
+    # įrašai į failus — kaip v0.1
+    mining_info = {
+        "block_id": winner.block_id,
+        "nonce": winner.nonce,
+        "hash": winner.hash,
+        "difficulty": winner.difficulty
+    }
+    write_to_file_mining(mining_info, mining_log=mining_file)
+    write_block_to_file(winner, filename=block_file)
 
+    # vienodas UX — preview ir čia
+    print_block_txs_to_console(
+        winner,
+        print_all=print_txs,
+        preview_count=tx_preview
+    )
+
+    # vienas aiškus SUMMARY blokas (be perteklinių dubliavimų)
+    print(f"[SUMMARY] Block #{winner.block_id} mined at difficulty={winner.difficulty}")
+    print(f"[SUMMARY] Hash={winner.hash}, nonce={winner.nonce}")
+    print(f"[SUMMARY] Included TXs: {included}, mempool left: {len(transactions)}")
+    print(f"[SUMMARY] Chain length: {len(blockchain.chain)}")
+    print("Block added. Current chain length =", len(blockchain.chain))

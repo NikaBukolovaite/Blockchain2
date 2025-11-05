@@ -1,7 +1,7 @@
 import sys
 from src.models import generate_users, generate_transactions
 from src.chain import Blockchain
-from src.mining import mine_blockchain
+from src.mining import mine_blockchain, distributed_mining
 
 def parse_flags(argv):
     # Paprastas flag'ų parsinimas: --append, --overwrite, --users=N, --tx=N, --block-size=N, --difficulty=N, --print-txs, --tx-preview=N
@@ -13,7 +13,13 @@ def parse_flags(argv):
         "block_size": 100,
         "difficulty": 3,
         "print_txs": False,  # jei True – visos TX bus spausdinamos konsolėje
-        "tx_preview": 3      # jei print_txs=False – tiek pirmų TX spausdinti
+        "tx_preview": 3,     # jei print_txs=False – tiek pirmų TX spausdinti
+        "parallel": False,
+        "candidates": 5,
+        "max_attempts": 10000,
+        "workers": None,
+        "get_block": None,   # NEW: užklausa dėl bloko
+        "get_tx": None       # NEW: užklausa dėl transakcijos
     }
     for a in argv:
         al = a.lower()
@@ -50,6 +56,27 @@ def parse_flags(argv):
                 flags["tx_preview"] = int(al.split("=", 1)[1])
             except:
                 print("Neteisinga --tx-preview reikšmė, naudosime numatytą: 3")
+        elif al == "--parallel":
+            flags["parallel"] = True
+        elif al.startswith("--candidates="):
+            try:
+                flags["candidates"] = int(al.split("=", 1)[1])
+            except:
+                print("Neteisinga --candidates reikšmė, naudosime 5")
+        elif al.startswith("--max-attempts="):
+            try:
+                flags["max_attempts"] = int(al.split("=", 1)[1])
+            except:
+                print("Neteisinga --max-attempts reikšmė, naudosime 10000")
+        elif al.startswith("--workers="):
+            try:
+                flags["workers"] = int(al.split("=", 1)[1])
+            except:
+                print("Neteisinga --workers reikšmė, ignoruojame")
+        elif al.startswith("--get-block="):      # NEW
+            flags["get_block"] = al.split("=", 1)[1]
+        elif al.startswith("--get-tx="):         # NEW
+            flags["get_tx"] = al.split("=", 1)[1]
         else:
             if al.startswith("--"):
                 print(f"Nežinomas flag'as: {a} (ignoruojame)")
@@ -70,18 +97,68 @@ def main():
     blockchain = Blockchain(difficulty=difficulty)
 
     # Visą srautą daro kasimo funkcija, kuri pati teisingai tvarko Block ID didėjimą.
-    mine_blockchain(
-        blockchain,
-        transactions,
-        users,  # perduodame users, kad outputs būtų galima priskirti pagal public_key
-        block_size=block_size,
-        difficulty=difficulty,
-        block_file="block_output.txt",
-        mining_file="mining_log.txt",
-        append_mode=append_mode,
-        print_txs=flags["print_txs"],
-        tx_preview=flags["tx_preview"]
-    )
+    if flags["parallel"]:
+        # v0.2 dvasia — kartojam, kol mempool ištuštės
+        while transactions:
+            before = len(transactions)
+            distributed_mining(
+                blockchain,
+                transactions,
+                users,
+                block_size=block_size,
+                difficulty=difficulty,
+                num_candidates=flags["candidates"],
+                max_attempts=flags["max_attempts"],
+                block_file="block_output.txt",
+                mining_file="mining_log.txt",
+                workers=flags["workers"],
+                print_txs=flags["print_txs"],         # NEW
+                tx_preview=flags["tx_preview"]        # NEW
+            )
+            # sauga nuo įstrigimo (jei dėl kokių priežasčių blokas nepašalino TX)
+            after = len(transactions)
+            if after >= before:
+                print("Nerasta pažangos per šį ciklą, stabdome.")
+                break
+    else:
+        mine_blockchain(
+            blockchain,
+            transactions,
+            users,  # perduodame users, kad outputs būtų galima priskirti pagal public_key
+            block_size=block_size,
+            difficulty=difficulty,
+            block_file="block_output.txt",
+            mining_file="mining_log.txt",
+            append_mode=append_mode,
+            print_txs=flags["print_txs"],            # NEW – kad preview veiktų ir čia
+            tx_preview=flags["tx_preview"]           # NEW
+        )
+
+    # Užklausos apie bloką / transakciją po kasimo (bitcoin-cli stiliaus)
+    if flags["get_block"] is not None:
+        try:
+            blk_id = int(flags["get_block"])
+        except:
+            blk_id = None
+        if blk_id is None:
+            print("[QUERY] Blogas --get-block parametras (turi būti sveikas skaičius).")
+        else:
+            blk = blockchain.find_block_by_id(blk_id)
+            if blk:
+                print(f"[QUERY] Block #{blk.block_id} | hash={blk.hash} | ts={blk.timestamp} | txs={len(blk.transactions)}")
+                # gali prireikti detalių:
+                # print_block_txs_to_console(blk, print_all=False, preview_count=flags['tx_preview'])
+            else:
+                print("[QUERY] Block not found")
+
+    if flags["get_tx"] is not None:
+        tx = blockchain.find_tx_by_id(flags["get_tx"])
+        if tx:
+            print(f"[QUERY] TX {tx.transaction_id} | {tx.sender.name} -> {tx.receiver.name} | amount={tx.amount}")
+            print(f"        inputs={tx.inputs}")
+            print(f"        outputs={tx.outputs}")
+        else:
+            print("[QUERY] Transaction not found")
 
 if __name__ == "__main__":
     main()
