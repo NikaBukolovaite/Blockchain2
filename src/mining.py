@@ -144,7 +144,6 @@ def mine_blockchain(blockchain, transactions, users, block_size=100, difficulty=
             preview_count=tx_preview
         )
 
-        # SUMMARY: aiški santrauka dėstytojui
         print(f"[SUMMARY] Block #{new_block.block_id} mined at difficulty={new_block.difficulty}")
         print(f"[SUMMARY] Hash={new_block.hash}, nonce={new_block.nonce}")
         print(f"[SUMMARY] Included TXs: {included}, mempool left: {len(transactions)}")
@@ -170,7 +169,7 @@ def distributed_mining(blockchain, transactions, users, block_size=100, difficul
                          num_candidates=5, max_attempts=10000,
                          block_file=out_path("block_output.txt"), mining_file=out_path("mining_log.txt"),
                          workers=None,
-                         print_txs=False,            # preview/vistos TX konsolėje
+                         print_txs=False,            # preview TX konsolėje
                          tx_preview=3):              # kiek rodyti per preview
     if not transactions:
         print("nera transakciju kasimui")
@@ -280,7 +279,7 @@ def distributed_mining(blockchain, transactions, users, block_size=100, difficul
             if tx in transactions:
                 transactions.remove(tx)
 
-    # įrašai į failus — kaip v0.1
+    # įrašai į failus
     mining_info = {
         "block_id": winner.block_id,
         "nonce": winner.nonce,
@@ -297,7 +296,6 @@ def distributed_mining(blockchain, transactions, users, block_size=100, difficul
         preview_count=tx_preview
     )
 
-    # vienas aiškus SUMMARY blokas (be perteklinių dubliavimų)
     print(f"[SUMMARY] Block #{winner.block_id} mined at difficulty={winner.difficulty}")
     print(f"[SUMMARY] Hash={winner.hash}, nonce={winner.nonce}")
     print(f"[SUMMARY] Included TXs: {included}, mempool left: {len(transactions)}")

@@ -4,19 +4,23 @@ Supaprastinta **blokų grandinė**, imituojanti UTXO modelį, transakcijų atran
 
 ---
 
-# Blockchain v1.0
+# Blockchain
 
 ## Turinys
 
 - [Apžvalga](#apžvalga)
+- [Projekto struktūra](#projekto-struktūra)
 - [Funkcijos](#funkcijos)
 - [Ekrano nuotraukos ir demonstracija](#ekrano-nuotraukos-ir-demonstracija)
 - [Architektūra](#architektūra)
 - [Programos paleidimas](#programos-paleidimas)
-- [Neteisingų flag'ų atvejai](#neteisingų-flagų-atvejai)
+- [Neteisingų flag’ų atvejai](#neteisingų-flagų-atvejai)
 - [Konfigūracija (CLI flag'ai)](#konfigūracija-cli-flagai)
-- [Rezultatai ir log'ai](#rezultatai-ir-logai)
+- [Neteisingų flag'ų atvejai](#neteisingų-flagų-atvejai)
+- [Išvesties režimai](#išvesties-režimai)
 - [Kaip tai veikia?](#kaip-tai-veikia)
+- [Unit testai](#unit-testai)
+- [AI pagalba](#ai-pagalba)
 
 ---
 
@@ -29,13 +33,18 @@ Programa generuoja vartotojus (UTXO mozaika), kuria atsitiktines transakcijas, f
 ## Programos struktūra
 
 projekto_aplankas/
-├─ hashing.py # AES pagrindu hash funkcija ir helper'iai
-├─ models.py # User, Transaction; generate_users(), generate_transactions()
-├─ merkle.py # calculate_merkle_root()
-├─ block.py # Block klasė, bloko hash skaičiavimas
-├─ chain.py # Blockchain klasė, create_new_block()
-├─ mining.py # mine_blockchain(), žurnalų rašymas
-└─ cli.py # įėjimo taškas: flag'ai ir main()
+├─ src/
+│ ├─ hashing.py # AES pagrindu hash funkcija ir helper’iai
+│ ├─ models.py # User, Transaction; generate_users(), generate_transactions()
+│ ├─ merkle.py # calculate_merkle_root()
+│ ├─ block.py # Block klasė, bloko header/hash
+│ ├─ chain.py # Blockchain klasė, create_new_block()
+│ ├─ mining.py # mine_blockchain(), distributed_mining(), išvedimai į failus
+│ ├─ cli.py # įėjimo taškas: flag’ai ir main()
+│ └─ paths.py # output/ katalogo utilitai: ensure_output_dir(), out_path()
+├─ tests/
+│ └─ test_blockchain.py
+└─ output/ # visi .txt išvedimai
 
 ---
 
@@ -48,6 +57,7 @@ projekto_aplankas/
 - **Dviginės panaudos prevencija** kasimo metu (tikrinami įėjimo UTXO egzistavimai).
 - **Išvedimai**: konsolėje ir tekstiniuose failuose.
 - **Konsolės peržiūra**: po kiekvieno bloko į konsolę išvedamos pirmos N transakcijų (numatytai N=3) arba visos, jei taip nurodoma flag’u.
+- **Lygiagretus kasimas**: keli kandidatų blokai kasama su `ProcessPoolExecutor`. Laimi pirmas radęs tinkamą hash; palaikomi `--candidates`, `--workers`, `--max-attempts`.
 
 ---
 
@@ -55,13 +65,22 @@ projekto_aplankas/
 
 **Konsolės eiga (kasimas):**
 
-<p align="center">
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/38d2bb4064782d62a14e0ba4ae7b1b24d9b7e0de/imagines/konsole%20(2).png" alt="Kasimo eiga – konsolė" width="780" />
-</p>
+<div align="center">
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
+</div>
 
 **Failų išvestys:**
 
 <div align="center">
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
+  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
   <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/mininglog.png" alt="mining_log.txt ištrauka" width="380" />
   <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
 </div>
@@ -138,38 +157,96 @@ python -m src.cli --append --overwrite
 
 ## Konfigūracija (CLI flag'ai)
 
-| Flag               | Reikšmė                                  |  Numatytoji | Pastabos                                       |
-| ------------------ | ---------------------------------------- | ----------: | ---------------------------------------------- |
-| `--users=INT`      | Sugeneruojamų vartotojų skaičius         |      `1000` | Didesnės reikšmės – daugiau RAM/CPU            |
-| `--tx=INT`         | Sugeneruojamų transakcijų skaičius       |     `10000` |                                                |
-| `--block-size=INT` | Transakcijų sk. viename bloke            |       `100` | Parenkama iki `block-size` **atsitiktinių** TX |
-| `--difficulty=INT` | PoW sudėtingumas (nuliai hash pradžioje) |         `3` | `3` → `000…` prefiksas                         |
-| `--append`         | Rašyti **pridedant** prie failų          |           — | Jei nenurodyta – veikia kaip `--overwrite`     |
-| `--overwrite`      | Failus **perrašyti** nuo tuščio          | **įjungta** |                                                |
-| `--print-txs`      | Į konsolę spausdinti **visas** TX        |           — | Jei nenaudojamas – rodomas tik **preview**     |
-| `--tx-preview=INT` | Į konsolę spausdinti **pirmas N** TX     |         `3` | Ignoruojama, jei naudojamas `--print-txs`      |
+| Flag                 | Reikšmė                                                 |  Numatytoji | Pastabos                                       |
+| -------------------- | ------------------------------------------------------- | ----------: | ---------------------------------------------- |
+| `--users=INT`        | Sugeneruojamų vartotojų skaičius                        |      `1000` | Didesnės reikšmės – daugiau RAM/CPU            |
+| `--tx=INT`           | Sugeneruojamų transakcijų skaičius                      |     `10000` |                                                |
+| `--block-size=INT`   | Transakcijų sk. viename bloke                           |       `100` | Parenkama iki `block-size` **atsitiktinių** TX |
+| `--difficulty=INT`   | PoW sudėtingumas (nuliai hash pradžioje)                |         `3` | `3` → `000…` prefiksas                         |
+| `--append`           | Rašyti **pridedant** prie failų                         |           — | Jei nenurodyta – veikia kaip `--overwrite`     |
+| `--overwrite`        | Failus **perrašyti** nuo tuščio                         | **įjungta** |                                                |
+| `--print-txs`        | Į konsolę spausdinti **visas** TX                       |           — | Jei nenaudojamas – rodomas tik **preview**     |
+| `--tx-preview=INT`   | Į konsolę spausdinti **pirmas N** TX                    |         `3` | Ignoruojama, jei naudojamas `--print-txs`      |
+| `--parallel`         | Įjungia lygiagretų kasimą                               |           — |                                                |
+| `--candidates=INT`   | Kiek kandidatinių blokų kurti lygiagretam kasimui       |         `5` |                                                |
+| `--max-attempts=INT` | Bandymų sk. kandidatui (didinamas, jei nieko neranda)   |     `10000` |                                                |
+| `--workers=INT`      | Proceso skaičius (jei nenurodyta – parenkama pagal CPU) |           — |                                                |
+| `--get-block=N`      | Po kasimo atspausdina bloko #N santrauką                |           — |                                                |
+| `--get-tx=HEX`       | Po kasimo atspausdina transakciją pagal jos ID          |           — |                                                |
 
 ---
 
-## Rezultatai ir log'ai
+## Išvesties režimai
 
-- **`mining_log.txt`** – kasimo ataskaitos (Block ID, Difficulty, Nonce, Block Hash).
-- **`block_output.txt`** – blokų santrauka (ID, Timestamp, Hash) ir – jei įjungta – transakcijų detalės.
-- **Konsolė** – eiga („Kasamas blokas…“, „Blokas iškastas!“), perspėjimai (pvz., dėl dvigubų panaudų) ir transakcijų peržiūra:
-  - numatytai – pirmos 3 kiekvieno bloko transakcijos,
-  - su --tx-preview=N – pirmos N,
-  - su --print-txs – visos.
+### 1) Sekvencinis paleidimas (numatytasis)
+
+- Paleidimas: **be** `--parallel`.
+- Failai:
+  - `output/sequential_block_output.txt`
+  - `output/sequential_mining_log.txt`
+- Konsolė:
+  - `Kasamas blokas X su N transakciju...`
+  - `Blokas iskastas! Nonce=... Hash=...`
+  - Gali būti daug **įspėjimų**:  
+    `ĮSPĖJIMAS: TX praleista (nebėra input UTXO). Siuntėjas=User_...`  
+    (tai vyksta dėl **UTXO validacijos po kasimo**).
+  - Santrauka su `[SUMMARY] ...` (įtrauktų TX skaičius, likęs mempool, grandinės ilgis).
+
+### 2) Lygiagretus paleidimas
+
+- Paleidimas: su `--parallel` (ir, jei reikia, `--candidates`, `--workers`, `--max-attempts`).
+- Failai:
+  - `output/parallel_block_output.txt`
+  - `output/parallel_mining_log.txt`
+- Konsolė:
+  - `Sukurta K kandidatinių blokų, pradedamas LYGIAGRETUS kasimas (W proc.)...`
+  - Pirmasis radęs tinkamą hash laimi:  
+    `Block #X mined. Attempts = A. Nonce = N`
+  - **Įspėjimų apie praleistas TX nerasite** (šiame režime tik laimėtojo bloko TX tiesiogiai taikomi UTXO, be papildomo „missing inputs“ tikrinimo).
+  - Galutinis `[SUMMARY]` vienoje eilutėje + `Block added...`.
+
+### 3) Unit testų paleidimas
+
+- Paleidimas: `python -m unittest discover -s tests -p "test_*.py" -v`
+- Failai (pagal `mining.py` numatytas reikšmes, nes testai jų nepersiunčia):
+  - `output/block_output.txt`
+  - `output/mining_log.txt`
+- Konsolė:
+  - Testai nutildo `stdout/stderr`, todėl pamatysite tik unittest išvestį.
+  - Vidiniai kasimo pranešimai/įspėjimai vis tiek rašomi į **failus** `output/`.
 
 **Greitas pavyzdys:**
 
 ```bash
-Kasamas blokas 1 su 100 transakciju...
-Blokas iskastas! Nonce=48217 Hash=000a4f2c...e19
-  Transakcijų peržiūra (pirmos 3 iš 100):
-  TX#1: User_12 -> User_401, amount=327
-    Inputs:  [...]
-    Outputs: [...]
-  TX#2: ...
+Kasamas blokas 100 su 83 transakciju...
+Blokas iskastas! Nonce=5069 Hash=0004b6601ee36dcf8d40de14d884e9fc
+
+ĮSPĖJIMAS: TX praleista (nebėra input UTXO). Siuntėjas=User_172
+ĮSPĖJIMAS: TX praleista (nebėra input UTXO). Siuntėjas=User_351
+ĮSPĖJIMAS: TX praleista (nebėra input UTXO). Siuntėjas=User_310
+... (daug panašių įspėjimų praleista) ...
+ĮSPĖJIMAS: TX praleista (nebėra input UTXO). Siuntėjas=User_759
+
+Block ID: 100
+Block Timestamp: 2025-11-05 22:54:48
+Block Hash: 0004b6601ee36dcf8d40de14d884e9fc
+  Transakcijų peržiūra (pirmos 3 iš 83):
+  TX#1: User_172 -> User_506, amount=614
+    Inputs:  [('7d426ce49609063b4876e3b855f29032', 8611)]
+    Outputs: [('efd4fe88cdc292cd20ef6f6507177148', 614), ('1c8565212d3262dcdc9d6b7b61d91dcb', 7997)]
+  TX#2: User_351 -> User_623, amount=973
+    Inputs:  [('0f288fed00e1d343758b07378b95c4fb', 48914)]
+    Outputs: [('0d7f28dd79f5258a263dba56a52a84a9', 973), ('ba33d7efe4db47bcf059af332fc1d579', 47941)]
+  TX#3: User_310 -> User_423, amount=714
+    Inputs:  [('ea9883cafa85feb0b9599a6d6738a9ae', 113084)]
+    Outputs: [('0d962c24b86f4b7526913abc30af1991', 714), ('481c0754944851a859bb6897e7551e71', 112370)]
+  … ir dar 80 transakcijų (pilna versija: block_output.txt)
+
+[SUMMARY] Block #100 mined at difficulty 3
+[SUMMARY] Hash=0004b6601ee36dcf8d40de14d884e9fc, nonce=5069
+[SUMMARY] Included TXs: 0, mempool left: 0
+[SUMMARY] Chain length: 100
+
 ```
 
 ---
@@ -232,31 +309,57 @@ Blokas iskastas! Nonce=48217 Hash=000a4f2c...e19
 
 ### 5) Patvirtinimas ir UTXO atnaujinimas
 
-Po sėkmingo kasimo — **tik tada** — pritaikomi kandidatiniai pakeitimai:
+**1) Duomenų generavimas**
 
-1. **Input UTXO tikrinimas:**
+- `generate_users(N)`: sukuria ~N vartotojų su `public_key` (per `aes_hashing`) ir realistiška UTXO mozaika (tikslinė suma `[100..1_000_000]` → 1 arba 5–15 UTXO).
+- `generate_transactions(M)`: suformuoja TX **nekeisdama globalios būsenos** – parenka `inputs` (pilnus UTXO), sukuria `outputs` (įskaitant grąžą), apskaičiuoja **deterministinį** `transaction_id` iš `sender_pk`, `receiver_pk`, `amount`, `tx_nonce`, **surikiuotų** `inputs` ir `outputs` → `aes_hashing()`.
 
-   - Kiekvienai transakcijai paimamas siuntėjas ir jo dabartinis UTXO sąrašas.
-   - Jei nors vienas `input` UTXO **nebėra** pas siuntėją (pvz., kitoje transakcijoje jau sunaudotas):
-     - transakcija **praleidžiama** (nekeičiant būsenos), o apie tai išvedamas įspėjimas.
+**2) Bloko kandidatūra**
 
-2. **Input UTXO nuėmimas:**
+- `create_new_block(...)`: iš mempool paima iki `block_size` TX, suformuoja `Block` (`prev_block_hash`, `timestamp`, `version=1`, `difficulty`, `nonce=0`, `merkle_root`).
 
-   - Jei `input` UTXO egzistuoja — `sender.remove_utxos(input_ids)` sunaudoja pilnus UTXO.
+**3) Merkle root**
 
-3. **Output UTXO sukūrimas:**
+- TX ID (hex) poruojami baitų lygiu, nelyginiam kiekiui dubliuojamas paskutinis; iteruojama, kol lieka 1 hash.
 
-   - Kiekvienam `output (pk, amount)` sukuriamas naujas UTXO **gavėjui** (arba grąža siuntėjui): `user.add_utxo(amount)`.
+**4) Kasimas (PoW)**
 
-4. **Transakcijų pašalinimas iš bendro sąrašo:**
+- Hash’inami 6 header laukai: `prev_hash | timestamp | version | merkle_root | nonce | difficulty`.
+- Didinamas `nonce`, kol `hash` prasideda nulių prefiksu pagal `difficulty`.
 
-   - Tik tos `selected` transakcijos, kurios dalyvavo bloke, pašalinamos iš „mempool“ sąrašo.
+**5) Patvirtinimas ir UTXO atnaujinimas**
 
-5. **Bloko įtraukimas į grandinę:**
+- **Sekvencinis**: kiekvienai TX tikrinama, ar `input` UTXO dar egzistuoja; jei trūksta – **praleidžiama** (įspėjimas). Galiojančioms: `remove_utxos()` + `add_utxo()` adresatams; iš mempool pašalinamos **visos parinktos** TX (įsk. praleistas).
+- **Lygiagretus**: taikomos **tik laimėtojo bloko** TX; `remove_utxos()` + `add_utxo()` be „missing inputs“ įspėjimų; iš mempool pašalinamos **tik laimėtojo** TX.
 
-   - `blockchain.add_block(new_block)`.
+**6) Išvestis**
 
-6. **Išvestis**
-   - `mining_log.txt` — `Block ID`, `Difficulty`, `Nonce`, `Block Hash`.
-   - `block_output.txt` — bloko santrauka ir (pasirinktinai) detali transakcijų informacija.
-   - **Konsolė** — po kiekvieno bloko: transakcijų peržiūra (N pirmų arba visos, pagal flag’us).
+- Failai į `output/` (žr. [Išvesties režimai](#išvesties-režimai)).
+  - **Konsolė** — po kiekvieno bloko: transakcijų peržiūra (N pirmų arba visos, pagal flag’us).
+
+---
+
+## Unit testai
+
+- Paleidimas: `python -m unittest discover -s tests -p "test_*.py" -v`
+- Tikrinama:
+  - UTXO elgsena (`add_utxo`, `remove_utxos`, balansas).
+  - Deterministinis `transaction_id` ir jo validacija.
+  - Merkle root stabilumas / jautrumas pokyčiams.
+  - PoW logika (nonce įtaka hash, prefiksas su nuliais).
+  - Lygiagretus kasimas (bent vienas blokas, `hash` ilgis 32 hex, `merkle_root` nenulis).
+- Testai nutildo SUMMARY, bet failai rašomi į `output/block_output.txt` ir `output/mining_log.txt`.
+
+---
+
+## AI pagalba
+
+Šiame projekte AI asistentas prisidėjo taip:
+
+- Parengė **Merkle root** skaičiavimo pseudokodą, pagal kurį buvo realizuota funkcija.
+- **UTXO** daliai (2 versijai) paaiškino, kaip suprojektuoti ir parašyti kodą (inputs/outputs, grąža, UTXO atnaujinimas).
+- Apskritai paaiškino, **kaip įgyvendinti UTXO modelį** šiame projekte.
+- Paaiškino, kaip sukurti **lygiagretų kasimą** (kandidatinių blokų generavimas, `ProcessPoolExecutor`, laimėtojo parinkimas).
+- Paaiškino, kaip teisingai **implementuoti CLI flag’us** (parsavimas, numatytosios reikšmės, elgsena su `--append/--overwrite` ir kt.).
+- **Pataisė gramatines klaidas** dokumentacijoje ir pranešimuose (konsolės išvestis, README.md).
+- **Padėjo ištaisyti programines klaidas** (pvz., rašybos klaida `block_transactions` → `block.transactions`, numatytieji išvesties keliai į `output/`, smulkūs patikimumo/saugumo patobulinimai).

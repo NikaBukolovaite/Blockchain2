@@ -107,7 +107,7 @@ def main():
 
     # Visą srautą daro kasimo funkcija, kuri pati teisingai tvarko Block ID didėjimą.
     if flags["parallel"]:
-        # v0.2 dvasia — kartojam, kol mempool ištuštės
+        # v0.2 — kartojam, kol mempool ištuštės
         while transactions:
             before = len(transactions)
             distributed_mining(

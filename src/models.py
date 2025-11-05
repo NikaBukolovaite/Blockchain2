@@ -31,7 +31,7 @@ def generate_users(num_users=1000):
         name = f"User_{i+1}"
         public_key = aes_hashing(f"{name}{random.randint(1, 10000)}".encode()).hex()
         user = User(name, public_key)
-        # vietoje fiksuotu 10 mazu UTXO – parenkame tiksline pradine suma [100..1_000_000] ir suskaidome i kelis UTXO
+        # vietoje fiksuotu 10 mazu UTXO – parenkame tiksline pradine suma ir suskaidome i kelis UTXO
         target_total = random.randint(100, 1000000)
         if target_total < 1000:
             user.add_utxo(target_total)
@@ -40,7 +40,6 @@ def generate_users(num_users=1000):
             n_utxos = random.randint(5, 15)
             remaining = target_total
             for _ in range(n_utxos - 1):
-                # gabalas tarp ~1% ir ~20% likucio, bet ne maziau kaip 100
                 low = max(100, remaining // 100)
                 high = max(low, remaining // 5)
                 chunk = random.randint(low, high)
@@ -115,7 +114,7 @@ class Transaction:
             raise ValueError("Siuntėjas neturi pakankamai pinigų.")  # papildoma sauga
 
         # inputs = sunaudojame pilnus UTXO (klasikinis UTXO modelis)
-        self.inputs = used[:]  # [(utxo_id, utxo_value), ...]
+        self.inputs = used[:]  
 
         # outputs = 1) gavėjui visa suma 2) siuntėjui grąža (jei liko)
         change = acc - remaining_amount
