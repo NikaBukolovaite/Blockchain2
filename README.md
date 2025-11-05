@@ -84,13 +84,13 @@ projekto_aplankas/
 Paleisti programą su default nustatymais galima į konsolę įvedus:
 
 ```bash
-python src/cli.py
+python -m src.cli
 ```
 
 Norint paleisti programą su pasirinktu(ais) parametrais:
 
 ```bash
-python src/cli.py --users=1000 --tx=10000 --block-size=100 --difficulty=3 --overwrite
+python -m src.cli --users=1000 --tx=10000 --block-size=100 --difficulty=3 --overwrite
 ```
 
 > Pastaba: nebūtina nurodyti visų flagų — galite pasirinkti tik reikiamus, o likusieji bus pritaikyti pagal numatytąsias reikšmes.
@@ -122,15 +122,15 @@ python src/cli.py --users=1000 --tx=10000 --block-size=100 --difficulty=3 --over
 
 ```bash
 # Klaidinga reikšmė ir neatpažintas flag'as:
-python src/cli.py --users=abc --tx=5000 --foo=bar
+python -m src.cli --users=abc --tx=5000 --foo=bar
 # Rezultatas: users → 1000 (default), tx → 5000; --foo ignoruotas.
 
 # Dublikatai:
-python src/cli.py --users=500 --users=2000
+python -m src.cli --users=500 --users=2000
 # Rezultatas: users → 2000
 
 # Abu režimai paminėti:
-python src/cli.py --append --overwrite
+python -m src.cli --append --overwrite
 # Rezultatas: rašys per naują (overwrite), nes paskutinis nugalėjo.
 ```
 

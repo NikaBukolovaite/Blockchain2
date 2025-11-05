@@ -1,15 +1,14 @@
 import unittest
 import sys
 import os
-
 import random
+
 from src.hashing import aes_hashing
 from src.models import User, Transaction, generate_users, generate_transactions
 from src.merkle import calculate_merkle_root
 from src.mining import distributed_mining
 from src.chain import Block, Blockchain
 
-#padaryti su DI pagalba
 
 class TestUser(unittest.TestCase):
     def test_utxo_balance_add_remove(self):
@@ -20,6 +19,7 @@ class TestUser(unittest.TestCase):
         first_utxo_id = user.get_utxos()[0][0]
         user.remove_utxos({first_utxo_id})
         self.assertEqual(user.get_balance(), 200)
+
 
 class TestTransaction(unittest.TestCase):
     def setUp(self):
@@ -47,31 +47,39 @@ class TestTransaction(unittest.TestCase):
         with self.assertRaises(ValueError):
             tx.generate_transaction()
 
-    class TestMerkleTree(unittest.TestCase):
-        def test_merkle_root_consistency(self):
-            users = generate_users(4)
-            txs = []
-            for i in range(4):
-                t = Transaction(users[0], users[1], 10 + i)
-                t.generate_transaction()
-                txs.append(t)
 
-            root1 = calculate_merkle_root(txs)
-            root2 = calculate_merkle_root(txs)
-            self.assertEqual(root1, root2)
+class TestMerkleTree(unittest.TestCase):
+    def test_merkle_root_consistency(self):
+        users = generate_users(4)
+        txs = []
+        for i in range(4):
+            t = Transaction(users[0], users[1], 10 + i)
+            t.generate_transaction()
+            txs.append(t)
 
-        def test_merkle_root_changes_if_data_changes(self):
-            users = generate_users(4)
-            txs = []
-            for i in range(4):
-                t = Transaction(users[0], users[1], 10 + i)
-                t.generate_transaction()
-                txs.append(t)
+        root1 = calculate_merkle_root(txs)
+        root2 = calculate_merkle_root(txs)
+        self.assertEqual(root1, root2)
 
-            root1 = calculate_merkle_root(txs)
-            txs[0].amount = 9999
-            root2 = calculate_merkle_root(txs)
-            self.assertNotEqual(root1, root2)
+    def test_merkle_root_changes_if_data_changes(self):
+        users = generate_users(4)
+        txs = []
+        for i in range(4):
+            t = Transaction(users[0], users[1], 10 + i)
+            t.generate_transaction()
+            txs.append(t)
+
+        root1 = calculate_merkle_root(txs)
+
+        # Pakeičiame pirmą transakciją nauja, kad tikrai pasikeistų transaction_id
+        new_tx = Transaction(users[0], users[1], 42)
+        new_tx.generate_transaction()
+        txs[0] = new_tx
+
+        root2 = calculate_merkle_root(txs)
+        self.assertNotEqual(root1, root2)
+
+
 class TestProofOfWorkLogic(unittest.TestCase):
     def test_pow_logic_changes_with_nonce(self):
         users = generate_users(5)
@@ -80,10 +88,12 @@ class TestProofOfWorkLogic(unittest.TestCase):
         blockchain = Blockchain(difficulty=difficulty)
         block = Block(1, txs, difficulty=difficulty)
         block.prev_block_hash = blockchain.get_last_hash()
+
         first_hash = block.calculate_hash()
         block.nonce += 1
         second_hash = block.calculate_hash()
         self.assertNotEqual(first_hash, second_hash, "Hash turi keistis keičiant nonce")
+
         start_nonce = block.nonce
         iterations = 0
         max_iterations = 5000
@@ -100,13 +110,14 @@ class TestProofOfWorkLogic(unittest.TestCase):
         self.assertTrue(block.hash.startswith("0" * block.difficulty) or block.difficulty < 2)
         self.assertGreater(block.nonce, start_nonce)
         self.assertIsNotNone(block.merkle_root)
+
         self.assertEqual(len(blockchain.chain), 0, "Blokas dar nepridėtas prie grandinės")
         blockchain.add_block(block)
         self.assertEqual(len(blockchain.chain), 1)
         self.assertEqual(blockchain.chain[0].hash, block.hash)
 
-class TestMiningCandidates(unittest.TestCase):
 
+class TestMiningCandidates(unittest.TestCase):
     def setUp(self):
         self.users = generate_users(10)
         self.transactions = generate_transactions(self.users, num_transactions=50)
@@ -127,9 +138,8 @@ class TestMiningCandidates(unittest.TestCase):
         self.assertGreater(end_len, start_len, "Po kasimo grandinė turėtų pailgėti bent 1 bloku")
         last_block = self.blockchain.chain[-1]
         self.assertIsNotNone(last_block.hash)
-        self.assertEqual(len(last_block.hash), 32)  # 32 baitai hex (AES hash)
+        self.assertEqual(len(last_block.hash), 32)
         self.assertIsNotNone(last_block.merkle_root)
-
 
 
 if __name__ == '__main__':
