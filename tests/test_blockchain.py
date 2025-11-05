@@ -2,6 +2,7 @@ import unittest
 import sys
 import os
 import random
+import io
 
 from src.hashing import aes_hashing
 from src.models import User, Transaction, generate_users, generate_transactions
@@ -9,8 +10,27 @@ from src.merkle import calculate_merkle_root
 from src.mining import distributed_mining
 from src.chain import Block, Blockchain
 
+# Deterministiškumas visiems testams
+random.seed(0)
 
-class TestUser(unittest.TestCase):
+# Nutildyti stdout/stderr testų metu
+class BaseTest(unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self._stdout_orig = sys.stdout
+        self._stderr_orig = sys.stderr
+        self._stdout_buf = io.StringIO()
+        self._stderr_buf = io.StringIO()
+        sys.stdout = self._stdout_buf
+        sys.stderr = self._stderr_buf
+
+    def tearDown(self):
+        sys.stdout = self._stdout_orig
+        sys.stderr = self._stderr_orig
+        super().tearDown()
+
+
+class TestUser(BaseTest):
     def test_utxo_balance_add_remove(self):
         user = User("Alice", aes_hashing(b"Alice").hex())
         user.add_utxo(100)
@@ -21,8 +41,9 @@ class TestUser(unittest.TestCase):
         self.assertEqual(user.get_balance(), 200)
 
 
-class TestTransaction(unittest.TestCase):
+class TestTransaction(BaseTest):
     def setUp(self):
+        super().setUp()  # svarbu: kad veiktų stdout/stderr nutildymas
         self.users = generate_users(2)
         self.sender = self.users[0]
         self.receiver = self.users[1]
@@ -48,7 +69,7 @@ class TestTransaction(unittest.TestCase):
             tx.generate_transaction()
 
 
-class TestMerkleTree(unittest.TestCase):
+class TestMerkleTree(BaseTest):
     def test_merkle_root_consistency(self):
         users = generate_users(4)
         txs = []
@@ -80,7 +101,7 @@ class TestMerkleTree(unittest.TestCase):
         self.assertNotEqual(root1, root2)
 
 
-class TestProofOfWorkLogic(unittest.TestCase):
+class TestProofOfWorkLogic(BaseTest):
     def test_pow_logic_changes_with_nonce(self):
         users = generate_users(5)
         txs = generate_transactions(users, num_transactions=5)
@@ -117,8 +138,9 @@ class TestProofOfWorkLogic(unittest.TestCase):
         self.assertEqual(blockchain.chain[0].hash, block.hash)
 
 
-class TestMiningCandidates(unittest.TestCase):
+class TestMiningCandidates(BaseTest):
     def setUp(self):
+        super().setUp()  # svarbu: kad veiktų stdout/stderr nutildymas
         self.users = generate_users(10)
         self.transactions = generate_transactions(self.users, num_transactions=50)
         self.blockchain = Blockchain(difficulty=1)

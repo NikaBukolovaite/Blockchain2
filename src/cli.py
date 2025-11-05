@@ -2,6 +2,7 @@ import sys
 from src.models import generate_users, generate_transactions
 from src.chain import Blockchain
 from src.mining import mine_blockchain, distributed_mining
+from src.paths import out_path  # ⬅️ nauja
 
 def parse_flags(argv):
     # Paprastas flag'ų parsinimas: --append, --overwrite, --users=N, --tx=N, --block-size=N, --difficulty=N, --print-txs, --tx-preview=N
@@ -96,6 +97,14 @@ def main():
     transactions = generate_transactions(users, tx_n)
     blockchain = Blockchain(difficulty=difficulty)
 
+    # Failų vardai pagal režimą — VISI į output/
+    if flags["parallel"]:
+        block_file = out_path("parallel_block_output.txt")
+        mining_file = out_path("parallel_mining_log.txt")
+    else:
+        block_file = out_path("sequential_block_output.txt")
+        mining_file = out_path("sequential_mining_log.txt")
+
     # Visą srautą daro kasimo funkcija, kuri pati teisingai tvarko Block ID didėjimą.
     if flags["parallel"]:
         # v0.2 dvasia — kartojam, kol mempool ištuštės
@@ -109,11 +118,11 @@ def main():
                 difficulty=difficulty,
                 num_candidates=flags["candidates"],
                 max_attempts=flags["max_attempts"],
-                block_file="block_output.txt",
-                mining_file="mining_log.txt",
+                block_file=block_file,     # -> output/
+                mining_file=mining_file,   # -> output/
                 workers=flags["workers"],
-                print_txs=flags["print_txs"],         # NEW
-                tx_preview=flags["tx_preview"]        # NEW
+                print_txs=flags["print_txs"],
+                tx_preview=flags["tx_preview"]
             )
             # sauga nuo įstrigimo (jei dėl kokių priežasčių blokas nepašalino TX)
             after = len(transactions)
@@ -127,11 +136,11 @@ def main():
             users,  # perduodame users, kad outputs būtų galima priskirti pagal public_key
             block_size=block_size,
             difficulty=difficulty,
-            block_file="block_output.txt",
-            mining_file="mining_log.txt",
+            block_file=block_file,        # -> output/
+            mining_file=mining_file,      # -> output/
             append_mode=append_mode,
-            print_txs=flags["print_txs"],            # NEW – kad preview veiktų ir čia
-            tx_preview=flags["tx_preview"]           # NEW
+            print_txs=flags["print_txs"],
+            tx_preview=flags["tx_preview"]
         )
 
     # Užklausos apie bloką / transakciją po kasimo (bitcoin-cli stiliaus)
@@ -146,8 +155,6 @@ def main():
             blk = blockchain.find_block_by_id(blk_id)
             if blk:
                 print(f"[QUERY] Block #{blk.block_id} | hash={blk.hash} | ts={blk.timestamp} | txs={len(blk.transactions)}")
-                # gali prireikti detalių:
-                # print_block_txs_to_console(blk, print_all=False, preview_count=flags['tx_preview'])
             else:
                 print("[QUERY] Block not found")
 

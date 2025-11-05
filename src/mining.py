@@ -1,10 +1,13 @@
+# src/mining.py
 import os
 from concurrent.futures import ProcessPoolExecutor, FIRST_COMPLETED, wait
 
 from src.chain import create_new_block
+from src.paths import ensure_output_dir, out_path  # ⬅️ pridėtas out_path
 
 # funkcija irasymui i faila
-def write_block_to_file(block, filename="block_output.txt"):
+def write_block_to_file(block, filename=out_path("block_output.txt")):
+    ensure_output_dir()  # garantuojame, kad output/ egzistuoja
     with open(filename, "a", encoding="utf-8") as file:
         file.write(f"Block ID: {block.block_id}\n")
         file.write(f"Block Timestamp: {block.timestamp}\n")
@@ -47,7 +50,8 @@ def print_block_txs_to_console(block, print_all: bool = False, preview_count: in
         print(f"  … ir dar {len(block.transactions) - count} transakcijų (pilna versija: block_output.txt)")
 
 # funkcija irasanti i faila kasimo informacija
-def write_to_file_mining(mining_info, mining_log="mining_log.txt"):
+def write_to_file_mining(mining_info, mining_log=out_path("mining_log.txt")):
+    ensure_output_dir()
     with open(mining_log, "a", encoding="utf-8") as file:
         file.write(f"{'=' * 60}\n")
         file.write(f"MINING REPORT — Block ID: {mining_info['block_id']}\n")
@@ -58,11 +62,12 @@ def write_to_file_mining(mining_info, mining_log="mining_log.txt"):
 
 # maininimo funkcija (Proof-of-Work)
 def mine_blockchain(blockchain, transactions, users, block_size=100, difficulty=3,
-                    block_file="block_output.txt", mining_file="mining_log.txt",
+                    block_file=out_path("block_output.txt"), mining_file=out_path("mining_log.txt"),
                     append_mode=False,
                     print_txs=False,            # jei True – spausdina visas TX į konsolę
                     tx_preview=3):              # jei print_txs=False – spausdina tiek pirmų TX
     if not append_mode:
+        ensure_output_dir()
         open(block_file, "w", encoding="utf-8").close()
         open(mining_file, "w", encoding="utf-8").close()
 
@@ -163,7 +168,7 @@ def _mine_candidate_worker(prev_hash: str, timestamp: str, version: int,
 
 def distributed_mining(blockchain, transactions, users, block_size=100, difficulty=3,
                          num_candidates=5, max_attempts=10000,
-                         block_file="block_output.txt", mining_file="mining_log.txt",
+                         block_file=out_path("block_output.txt"), mining_file=out_path("mining_log.txt"),
                          workers=None,
                          print_txs=False,            # preview/vistos TX konsolėje
                          tx_preview=3):              # kiek rodyti per preview
