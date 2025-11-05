@@ -6,7 +6,10 @@ import random
 from src.hashing import aes_hashing
 from src.models import User, Transaction, generate_users, generate_transactions
 from src.merkle import calculate_merkle_root
+from src.mining import distributed_mining
 from src.chain import Block, Blockchain
+
+#padaryti su DI pagalba
 
 class TestUser(unittest.TestCase):
     def test_utxo_balance_add_remove(self):
@@ -101,6 +104,31 @@ class TestProofOfWorkLogic(unittest.TestCase):
         blockchain.add_block(block)
         self.assertEqual(len(blockchain.chain), 1)
         self.assertEqual(blockchain.chain[0].hash, block.hash)
+
+class TestMiningCandidates(unittest.TestCase):
+
+    def setUp(self):
+        self.users = generate_users(10)
+        self.transactions = generate_transactions(self.users, num_transactions=50)
+        self.blockchain = Blockchain(difficulty=1)
+
+    def test_candidate_generation_and_mining(self):
+        start_len = len(self.blockchain.chain)
+        distributed_mining(
+            blockchain=self.blockchain,
+            transactions=self.transactions,
+            users=self.users,
+            block_size=10,
+            difficulty=1,
+            num_candidates=5,
+            max_attempts=500
+        )
+        end_len = len(self.blockchain.chain)
+        self.assertGreater(end_len, start_len, "Po kasimo grandinė turėtų pailgėti bent 1 bloku")
+        last_block = self.blockchain.chain[-1]
+        self.assertIsNotNone(last_block.hash)
+        self.assertEqual(len(last_block.hash), 32)  # 32 baitai hex (AES hash)
+        self.assertIsNotNone(last_block.merkle_root)
 
 
 

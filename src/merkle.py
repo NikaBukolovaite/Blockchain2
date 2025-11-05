@@ -1,6 +1,7 @@
 from src.hashing import aes_hashing
 
 # funkcija Merkle Root Hash apskaiciavimui
+
 def calculate_merkle_root(transactions):
     tx_hashes = [tx.transaction_id for tx in transactions]
     if not tx_hashes:

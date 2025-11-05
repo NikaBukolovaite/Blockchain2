@@ -156,7 +156,7 @@ def distributed_mining(blockchain, transactions, users, block_size=100, difficul
         candidate_blocks.append((candidate, selected))
 
     print(f"Sukurta {num_candidates} kandidatinių blokų, pradedamas kasimas...")
-    winners = None
+    winner = None
     attempts = 0
     while  attempts < max_attempts:
         for candidate, _ in candidate_blocks:
@@ -187,7 +187,7 @@ def distributed_mining(blockchain, transactions, users, block_size=100, difficul
         if c is winner:
             winner_selected = selected
             break
-
+#sita dalis padaryta su DI pagalba
     if winner_selected:
         for tx in winner_selected:
             sender = tx.sender
@@ -198,7 +198,7 @@ def distributed_mining(blockchain, transactions, users, block_size=100, difficul
                 user = pk_index.get(pk, None)
                 if user:
                     user.add_utxo(val)
-
+#baigiasi dalis, padaryta su DI pagalba
         for tx in winner_selected:
             if tx in transactions:
                 transactions.remove(tx)
