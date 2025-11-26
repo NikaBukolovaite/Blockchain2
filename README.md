@@ -42,10 +42,10 @@ chmod +x install.sh
 ./install.sh --prefix=$HOME/libbitcoin --build-boost --disable-shared
 ```
 
-![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
-![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
-![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
-![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
+![imagine alt](https://github.com/NikaBukolovaite/Blockchain2/blob/bd3a0646c065e242e4dd0bddae87dab07b46d695/imagines/Screenshot%202025-11-24%20181653.png)
+![imagine alt](https://github.com/NikaBukolovaite/Blockchain2/blob/bd3a0646c065e242e4dd0bddae87dab07b46d695/imagines/Screenshot%202025-11-24%20184921.png)
+![imagine alt](https://github.com/NikaBukolovaite/Blockchain2/blob/bd3a0646c065e242e4dd0bddae87dab07b46d695/imagines/Screenshot%202025-11-24%20191716.png)
+![imagine alt](https://github.com/NikaBukolovaite/Blockchain2/blob/bd3a0646c065e242e4dd0bddae87dab07b46d695/imagines/Screenshot%202025-11-24%20192923.png)
 
 ---
 
@@ -93,7 +93,39 @@ Po pataisymo kodas sėkmingai veikė.
 
 ---
 
-## c++ implemintavimas
+## Bitcoin bloko 100000 patikrinimas
+
+Kad patikrinti kodą su originaliais bitcoin blokais šiame tinklapyje - https://bitaps.com/100000
+Įkėliau 4 tranzakcijų hash
+
+![imagine alt](https://github.com/NikaBukolovaite/Blockchain2/blob/bd3a0646c065e242e4dd0bddae87dab07b46d695/imagines/Screenshot%202025-11-24%20205002.png)
+![imagine alt](https://github.com/NikaBukolovaite/Blockchain2/blob/bd3a0646c065e242e4dd0bddae87dab07b46d695/imagines/Screenshot%202025-11-24%20205014.png)
+
+ir tada paleidau programą, bet pirmą kartą paleidus rezultatas nesutapo su originaliu Merkle root.
+
+![imagine alt](https://github.com/NikaBukolovaite/Blockchain2/blob/bd3a0646c065e242e4dd0bddae87dab07b46d695/imagines/Screenshot%202025-11-24%20205137.png)
+![imagine alt](https://github.com/NikaBukolovaite/Blockchain2/blob/bd3a0646c065e242e4dd0bddae87dab07b46d695/imagines/Screenshot%202025-11-24%20205027.png)
+
+Kad pataisyti šitą kode reikėjo pakeisti šią eilutę
+
+```bash
+bc::encode_base16(merkle_root)
+```
+
+į šią
+
+```bash
+bc::encode_hash(merkle_root)
+
+```
+
+Ir rezultatas gavosi teisingas
+
+![imagine alt](https://github.com/NikaBukolovaite/Blockchain2/blob/bd3a0646c065e242e4dd0bddae87dab07b46d695/imagines/Screenshot%202025-11-24%20210312.png)
+
+---
+
+## create_merkle integravimas į Python blockchain projektą
 
 Užduotyje pateiktą c++ create_merkle() funkciją perrašiau į Python, bet su AI pagalba perrašiau prie blockchain projekto:
 
@@ -121,34 +153,6 @@ def calculate_merkle_root(transactions):
         merkle = new_level
     return merkle[0]
 ```
-
----
-
-## Bitcoin bloko 100000 patikrinimas
-
-Kad patikrinti kodą su originaliais bitcoin blokais šiame tinklapyje - https://bitaps.com/100000
-Įkėliau 4 tranzakcijų hash ir tada paleidau programą, bet pirmą kartą paleidus rezultatas nesutapo su originaliu Merkle root.
-
-![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
-![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
-
-Kad pataisyti šitą kode reikėjo pakeisti šią eilutę
-
-```bash
-bc::encode_base16(merkle_root)
-```
-
-į šią
-
-```bash
-bc::encode_hash(merkle_root)
-
-```
-
-Ir rezultatas gavosi teisingas
-
-![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
-![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
 
 ---
 
