@@ -13,7 +13,6 @@ Supaprastinta **blokų grandinė**, imituojanti UTXO modelį, transakcijų atran
 - [Kompiliavimas ir klaidų taisymas]()
 - [Bitcoin bloko #100000 testavimas]()
 - [create_merkle integravimas į Python blockchain projektą]()
-- [Naudotos nuotraukos]()
 
 ---
 
@@ -42,6 +41,11 @@ chmod +x install.sh
 ```bash
 ./install.sh --prefix=$HOME/libbitcoin --build-boost --disable-shared
 ```
+
+![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
+![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
+![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
+![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
 
 ---
 
@@ -125,10 +129,8 @@ def calculate_merkle_root(transactions):
 Kad patikrinti kodą su originaliais bitcoin blokais šiame tinklapyje - https://bitaps.com/100000
 Įkėliau 4 tranzakcijų hash ir tada paleidau programą, bet pirmą kartą paleidus rezultatas nesutapo su originaliu Merkle root.
 
-<div align="center">
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/0cee6598fa6e569a3a6f64a41375377524a6ebdf/imagines/Screenshot%202025-11-05%20234916.png" alt="sequential_block_output.txt ištrauka" width="380" />
-  <img src="https://github.com/NikaBukolovaite/Blockchain_Blockchain/blob/6b4b44aab9c552a3966e6cb2fa18f3faee8469dc/imagines/blokas.png" alt="block_output.txt ištrauka" width="380" />
-</div>
+![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
+![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
 
 Kad pataisyti šitą kode reikėjo pakeisti šią eilutę
 
@@ -144,6 +146,9 @@ bc::encode_hash(merkle_root)
 ```
 
 Ir rezultatas gavosi teisingas
+
+![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
+![imagine alt](https://github.com/NikaBukolovaite/Objektinis_Programavimas2/blob/516d1dcd726c9766854f47e2f61d16d386ab181b/Nuotraukos/Testai/Screenshot%202025-04-24%20161042.png)
 
 ---
 
