@@ -8,6 +8,15 @@ Supaprastinta **blokų grandinė**, imituojanti UTXO modelį, transakcijų atran
 
 ## Turinys
 
+- [1 užduotis](#1-užduotis)
+- [2 užduotis](#2-užduotis)
+- [3 užduotis](#3-užduotis)
+- [DI pagalba](#di-pagalba)
+
+# 1 užduotis
+
+## Turinys
+
 - [Libbitcoin diegimas]()
 - [Merkle.cpp failo sukūrimas]()
 - [Kompiliavimas ir klaidų taisymas]()
@@ -153,6 +162,353 @@ def calculate_merkle_root(transactions):
         merkle = new_level
     return merkle[0]
 ```
+
+---
+
+# 2 užduotis
+
+## Turinys
+
+- [Pilno Bitcoin mazgo (Bitcoin Core) įdiegimas](#pilno-bitcoin-mazgo-bitcoin-core-įdiegimas)
+
+## Pilno Bitcoin mazgo (Bitcoin Core) įdiegimas
+
+Deja, pilno Bitcoin mazgo įdiegti nepavyo, kadangi naudojau hard diską (kompiuteryje nėra pakankamai vietos), o į hard diską įdiegimas vyksta žymiai lėčiau. Pirma buvau įsidiegusi pruned mazgą, tačiau su juo nepavyo atliti 3 užduoties (diegimas užėmė 3 dienas). Todėl paleidau pilno Bitcoin mazgo siuntimąsi. Diegimas buvo paleistas apie dvi savaites ir rezultatas toks:
+
+![imagine alt]()
+
+---
+
+# 3 Užduotis
+
+## Turinys
+
+- [Prisijungimas prie VU mazgo](#prisijungimas-prie-vu-mazgo)
+- [Aplinka ir python-bitcoinlib](#aplinka-ir-python-bitcoinlib)
+- [`rpc_example.py` – blokų aukščio gavimas](#rpc_examplepy--blokų-aukščio-gavimas)
+- [`rpc_transaction.py` – transakcijos išėjimų analizė](#rpc_transactionpy--transakcijos-išėjimų-analizė)
+- [`rpc_block.py` – bloko transakcijų sumavimas](#rpc_blockpy--bloko-transakcijų-sumavimas)
+- [Transakcijos mokesčio skaičiavimas](#transakcijos-mokesčio-skaičiavimas)
+- [Bloko hash'o tikrinimas](#bloko-hasho-tikrinimas)
+- [Nuotrauka](#nuotrauka)
+
+---
+
+## Prisijungimas prie VU mazgo
+
+Pagal pateitas instrukcijas prisijungiau prie VU bitcoin mazgo.
+
+---
+
+## Aplinka ir python-bitcoinlib
+
+Sukūriau atskirą katalogą Python kodui:
+
+```bash
+mkdir -p ~/btc-python
+cd ~/btc-python
+```
+
+VU mazge python-bitcoinlib jau buvo įdiegta (ar įdiegta po dėstytojo nurodymų), todėl tiesiog patikrinau:
+
+```bash
+python3 -c "from bitcoin.rpc import RawProxy; print('OK, veikia')"
+```
+
+---
+
+## `rpc_example.py` – blokų aukščio gavimas
+
+Sukūriau failą:
+
+```bash
+nano rpc_example.py
+```
+
+Ir įklijavau kodą:
+
+```bash
+from bitcoin.rpc import RawProxy
+
+# Sukuriame RPC jungtį su vietiniu/VU Bitcoin Core mazgu
+p = RawProxy()
+
+# Paleidžiame getblockchaininfo RPC komandą
+info = p.getblockchaininfo()
+
+# Iš duomenų paimame 'blocks' lauką
+print(info["blocks"])
+```
+
+Paleidimas:
+
+```bash
+python3 rpc_example.py
+```
+
+---
+
+## `rpc_transaction.py` – transakcijos išėjimų analizė
+
+Sukūriau:
+
+```bash
+nano rpc_transaction.py
+```
+
+Įkėliau pavyzdinį kodą (pagal dėstytojo užduotį):
+
+```bash
+from bitcoin.rpc import RawProxy
+
+# Sukuriam jungtį
+
+p = RawProxy()
+
+# Alice transakcijos ID (pavyzdys)
+
+txid = "0627052b6f28912f2703066a912ea577f2ce4da4caa5a5fbd8a57286c345c2f2"
+
+# Pasiimam transakciją hex pavidalu
+
+raw_tx = p.getrawtransaction(txid)
+
+# Dekoduojam į JSON objektą
+
+decoded_tx = p.decoderawtransaction(raw_tx)
+
+# Kiekvienam išėjimui atspausdinam adresą ir reikšmę
+
+for output in decoded_tx["vout"]:
+print(output["scriptPubKey"].get("address"), output["value"])
+```
+
+Paleidimas:
+
+```bash
+python3 rpc_transaction.py
+```
+
+---
+
+Sukūriau:
+
+```bash
+nano rpc_block.py
+```
+
+Kodas:
+
+```bash
+python
+Copy code
+from bitcoin.rpc import RawProxy
+
+p = RawProxy()
+
+# Bloko aukštis, kuriame yra "Alice" transakcija
+
+blockheight = 277316
+
+# Gauname to bloko hash
+
+blockhash = p.getblockhash(blockheight)
+
+# Pasiimam bloką pagal hash
+
+block = p.getblock(blockhash)
+
+# 'tx' yra visų transakcijų ID sąrašas tame bloke
+
+transactions = block["tx"]
+
+block_value = 0.0
+
+for txid in transactions:
+tx_value = 0.0
+
+    # Pasiimam transakciją
+    raw_tx = p.getrawtransaction(txid)
+    decoded_tx = p.decoderawtransaction(raw_tx)
+
+    for output in decoded_tx["vout"]:
+        tx_value += output["value"]
+
+    block_value += tx_value
+
+print("Total output value (in BTC) in block #277316:", block_value)
+```
+
+Paleidimas:
+
+```bash
+python3 rpc_block.py
+```
+
+---
+
+## Transakcijos mokesčio skaičiavimas
+
+Sukūriau failą:
+
+```bash
+nano tx_fee.py
+```
+
+Ir parašiau šį kodą:
+
+```bash
+from bitcoin.rpc import RawProxy
+
+p = RawProxy()
+
+# Duota transakcija
+txid = "4410c8d14ff9f87ceeed1d65cb58e7c7b2422b2d7529afc675208ce2ce09ed7d"
+
+# Pasiimam transakciją su detaliu JSON
+tx = p.getrawtransaction(txid, True)
+
+# Suskaičiuojame input sumą
+inputs_value = 0.0
+for vin in tx["vin"]:
+    prev_txid = vin["txid"]
+    prev_vout_index = vin["vout"]
+
+    prev_tx = p.getrawtransaction(prev_txid, True)
+    prev_output = prev_tx["vout"][prev_vout_index]
+
+    inputs_value += prev_output["value"]
+
+# Suskaičiuojam output sumą
+outputs_value = 0.0
+for vout in tx["vout"]:
+    outputs_value += vout["value"]
+
+fee_btc = inputs_value - outputs_value
+
+print("Inputs suma (BTC):", inputs_value)
+print("Outputs suma (BTC):", outputs_value)
+print("Mokestis (BTC):", fee_btc)
+```
+
+Paleidimas:
+
+```bash
+python3 tx_fee.py
+```
+
+---
+
+## Bloko hash'o tikrinimas
+
+Sukūriau failą:
+
+```bash
+nano check_block_hash.py
+```
+
+Ir įrašiau kodą:
+
+```bash
+from bitcoin.rpc import RawProxy
+import hashlib
+
+# Prisijungiam prie vietinio Bitcoin Core mazgo (VU nodo)
+
+p = RawProxy()
+
+# Pasirenkam bloko aukštį
+
+block_height = 277316
+
+# Gaunam bloko hash pagal aukštį
+
+block_hash_from_core = p.getblockhash(block_height)
+
+# Parsisiunčiam patį bloką
+
+block = p.getblock(block_hash_from_core)
+
+# Susikonstruojam bloko antraštę (block header) rankiniu būdu
+
+# Versija (version) – int -> 4 baitai, little-endian
+
+version_bytes = block["version"].to_bytes(4, "little")
+
+# Previous block hash – string (hex) -> bytes, apverčiam baitų tvarką (little-endian)
+
+prevhash_bytes = bytes.fromhex(block["previousblockhash"])[::-1]
+
+# Merkle root – string (hex) -> bytes, irgi apverčiam
+
+merkleroot_bytes = bytes.fromhex(block["merkleroot"])[::-1]
+
+# Time – int -> 4 baitai, little-endian
+
+time_bytes = block["time"].to_bytes(4, "little")
+
+# Bits – ateina kaip TEKSTAS (pvz. "1d00ffff"), tai:
+
+# 1) paverčiam iš hex į int
+
+# 2) tada į 4 baitus (little-endian)
+
+bits_int = int(block["bits"], 16)
+bits_bytes = bits_int.to_bytes(4, "little")
+
+# Nonce – int -> 4 baitai, little-endian
+
+nonce_bytes = block["nonce"].to_bytes(4, "little")
+
+# Sujungiame viską į vieną header'į:
+
+header = (
+version_bytes +
+prevhash_bytes +
+merkleroot_bytes +
+time_bytes +
+bits_bytes +
+nonce_bytes
+)
+
+# Paskaičiuojam double-SHA256 nuo header'io
+
+hash_once = hashlib.sha256(header).digest()
+hash_twice = hashlib.sha256(hash_once).digest()
+
+# Bitcoin rodomo hash formato (big-endian) gavimui apverčiam baitus
+
+calculated_hash = hash_twice[::-1].hex()
+
+print("=== Bloko hash tikrinimas ===")
+print(f"Bloko aukštis: {block_height}")
+print(f"Hash iš Bitcoin Core : {block_hash_from_core}")
+print(f"Pasaičiuotas hash: {calculated_hash}")
+print()
+print("Ar hash'ai sutampa? ->", calculated_hash == block_hash_from_core)
+```
+
+Paleidimas:
+
+```bash
+python3 check_block_hash.py
+```
+
+---
+
+## Nuotrauka
+
+![imagine alt]()
+
+---
+
+# DI pagalba
+
+DI šiame darbe padėjo:
+
+- Parašė pseudokodą, kad perrašyti c++ kodą į python kodą
+- Padėjo diegti libbitcoin (kai metė klaidas)
+- Padėjo pataisyti netikslumus rašant kodus tranzakcijos bloko skaičiavime ir bloko hash'o tikrinime.
 
 ---
 
