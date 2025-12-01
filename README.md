@@ -175,7 +175,7 @@ def calculate_merkle_root(transactions):
 
 Deja, pilno Bitcoin mazgo įdiegti nepavyo, kadangi naudojau hard diską (kompiuteryje nėra pakankamai vietos), o į hard diską įdiegimas vyksta žymiai lėčiau. Pirma buvau įsidiegusi pruned mazgą, tačiau su juo nepavyo atliti 3 užduoties (diegimas užėmė 3 dienas). Todėl paleidau pilno Bitcoin mazgo siuntimąsi. Diegimas buvo paleistas apie dvi savaites ir rezultatas toks:
 
-![imagine alt]()
+![imagine alt](https://github.com/NikaBukolovaite/Blockchain2/blob/2ddf776e6cd428b0a7ac68b63eee58025f9d10d9/imagines/bitcoin%20diegimas.png)
 
 ---
 
@@ -498,7 +498,7 @@ python3 check_block_hash.py
 
 ## Nuotrauka
 
-![imagine alt]()
+![imagine alt](https://github.com/NikaBukolovaite/Blockchain2/blob/2ddf776e6cd428b0a7ac68b63eee58025f9d10d9/imagines/putty.png)
 
 ---
 
